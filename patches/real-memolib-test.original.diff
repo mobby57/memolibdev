@@ -1,0 +1,5 @@
+--- a/src/__init__.py
++++ b/src/__init__.py
+@@ -1 +1,2 @@
+ # memoLib - src package
++# MemoLibDev V3 PATCH TEST - NON APPLIQUÉ

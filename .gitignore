@@ -1,0 +1,43 @@
+# ============================================================
+# MemoLibDev v3 — Git Ignore
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+
+# Environnements Python
+.venv/
+venv/
+env/
+
+# Secrets / configuration locale
+.env
+.env.*
+!.env.example
+
+# Runtime / données locales
+workspace/
+
+# Rapports générés
+reports/
+
+# Backups temporaires / historiques locaux
+*.backup-*
+*.pre-*
+*.broken-*
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
