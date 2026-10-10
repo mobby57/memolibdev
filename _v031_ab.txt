@@ -1,0 +1,90 @@
+========================================================================
+MEMOLIBDEV ÔÇö TEST analysis_builder (analyse explicative)
+========================================================================
+
+[T1] m├¬me contexte -> r├®sultat d├®terministe
+[PASS] T1 s├®rialisation identique
+[PASS] T1 rendu texte identique
+
+[T2] chaque fait provient d'un fichier du contexte
+[PASS] T2 au moins un fait extrait :: 6
+[PASS] T2 tous les faits ont une source du contexte :: ['src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx']
+[PASS] T2 elements_examines == fichiers du contexte
+
+[T3] aucun fait ne peut provenir d'un fichier absent du contexte
+[PASS] T3 aucun chemin ├®tranger dans les faits :: ['src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx', 'src/app/[locale]/auth/login/page.tsx']
+[PASS] T3 build_analysis n'it├¿re que sur relevant_files
+
+[T4] preview insuffisant -> LOW + incertitude
+[PASS] T4 confiance LOW :: LOW
+[PASS] T4 aucune cause
+[PASS] T4 incertitude pr├®sente
+[PASS] T4 incertitude mentionne contenu indisponible/insuffisant :: ("Aucun contenu de fichier n'├®tait disponible dans le contexte : l'analyse ne peut s'appuyer sur aucune preuve de contenu.", 'Contenu indisponible pour : src/auth/x.ts.', 'Le contenu disponible ne permet pas de confirmer la cause.')
+[PASS] T4b aucun fichier -> LOW
+[PASS] T4b aucun fichier -> incertitude :: ("Aucun fichier pertinent n'a ├®t├® identifi├® : analyse impossible.", 'Le contenu disponible ne permet pas de confirmer la cause.')
+[PASS] T4b aucun fichier -> aucun fait
+
+[T5] agent_loop._build_analysis -> texte (branche ANALYZED)
+[PASS] T5 texte non vide
+[PASS] T5 en-t├¬te lecture seule
+[PASS] T5 _build_analysis alimente final_state=ANALYZED
+
+[T6] aucun diff produit
+[PASS] T6 pas de marqueur diff '--- a/'
+[PASS] T6 pas de marqueur diff '+++ b/'
+[PASS] T6 pas de marqueur diff '@@ '
+[PASS] T6 pas de marqueur diff 'diff --git'
+[PASS] T6 pas de marqueur diff '<<<<<<<'
+[PASS] T6 pas de marqueur diff '>>>>>>>'
+
+[T7] jamais CORRIGER/REPLACE/apply/D5.x
+[PASS] T7 pas de REPLACE: dans la correction
+[PASS] T7 pas d'import subprocess :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import d59_controlled_apply :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import coder_authorization :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import controlled_coder :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import decision_agent :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import os :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import git :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import urllib :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+[PASS] T7 pas d'import socket :: ['__future__', 'confidence_engine', 'dataclasses', 're', 'typing']
+
+[T8] puret├® : aucune ├®criture / aucun open en ├®criture
+[PASS] T8 pas d'open(
+[PASS] T8 pas de .write(
+[PASS] T8 pas de Path(
+
+[T9] cause non ├®tay├®e -> None + incertitude d├®di├®e
+[PASS] T9 cause=None quand domaine inconnu
+[PASS] T9 incertitude 'ne permet pas de confirmer la cause' :: ("Le domaine de la demande n'a pas pu ├¬tre d├®termin├® de fa├ºon fiable : la pertinence des faits ne peut ├¬tre garantie.", 'Des ├®l├®ments ont ├®t├® observ├®s, mais aucun ne se rattache directement au domaine de la demande.', 'Le contenu disponible ne permet pas de confirmer la cause.')
+
+[T10] confiance HIGH exige des faits pertinents observables
+[PASS] T10 HIGH atteint sur preview riche + domaine AUTH :: HIGH
+[PASS] T10 cause probable fournie en HIGH
+[PASS] T10 correction descriptive fournie en HIGH
+[PASS] T10 MEDIUM ou LOW si <2 faits pertinents :: MEDIUM
+[PASS] T10 pas de cause si pas HIGH
+
+[T11] chaque fait : fichier+lignes+extrait r├®el+sha ; extrait Ôèé preview
+[PASS] T11 champs complets (fichier/lignes/extrait/sha)
+[PASS] T11 extrait r├®ellement pr├®sent dans le preview
+[PASS] T11 sha du fait == sha de la source
+[PASS] T11 n┬░ de ligne coh├®rent avec l'extrait
+
+[T12] invariant aucune_modification + contrat s├®rialisable complet
+[PASS] T12 cl├® contrat 'demande_comprise' pr├®sente
+[PASS] T12 cl├® contrat 'faits_verifies' pr├®sente
+[PASS] T12 cl├® contrat 'elements_examines' pr├®sente
+[PASS] T12 cl├® contrat 'analyse' pr├®sente
+[PASS] T12 cl├® contrat 'cause_probable' pr├®sente
+[PASS] T12 cl├® contrat 'correction_minimale' pr├®sente
+[PASS] T12 cl├® contrat 'confiance' pr├®sente
+[PASS] T12 cl├® contrat 'incertitudes' pr├®sente
+[PASS] T12 cl├® contrat 'aucune_modification' pr├®sente
+[PASS] T12 aucune_modification == True
+[PASS] T12 confiance Ôêê {HIGH,MEDIUM,LOW}
+[PASS] T12 faits s├®rialis├®s en dicts sourc├®s
+
+========================================================================
+R├ëSULTAT analysis_builder : 59 PASS / 0 FAIL
+========================================================================

@@ -1,0 +1,52 @@
+========================================================================
+MEMOLIBDEV ÔÇö D6.0 PHASE 2 : CONTEXT -> AGENT LOOP (int├®gration)
+========================================================================
+
+[P1] Happy path context-aware -> APPLIED
+[PASS] P1_cible_choisie_par_contexte :: src/version.ts
+[FAIL] P1_final_APPLIED :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration=2026-10-0
+[FAIL] P1_context_recheck_present :: re-check CONTEXT_FRESH pr├®sent
+[PASS] P1_not_committed
+[FAIL] P1_fichier_modifie
+[PASS] P1_aucun_commit :: commits=1
+[PASS] P1_aucun_remote :: aucun push
+
+[P2] Contexte construit puis fichier modifi├® -> BLOCKED
+[PASS] P2_final_BLOCKED :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration=2026-10-06T17:25:00
+[FAIL] P2_cause_context_stale
+[FAIL] P2_block_at_recheck :: BLOCK au re-check
+[PASS] P2_aucun_commit :: commits=1
+[PASS] P2_aucun_remote :: aucun push
+
+[P3] D├®rive d'un fichier du contexte -> BLOCKED
+[PASS] P3_final_BLOCKED :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration=2026-10-06T17:25:00
+[FAIL] P3_cause_context_stale :: drift=src/version.ts
+[PASS] P3_aucun_commit :: commits=1
+[PASS] P3_aucun_remote :: aucun push
+
+[P4] HEAD divergent apr├¿s construction -> BLOCKED
+[PASS] P4_final_BLOCKED :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration=2026-10-06T17:25:00
+[FAIL] P4_cause_head :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration=2026-10-06T17:25:00
+[PASS] P4_pas_de_commit_parasite :: commits=2
+[PASS] P4_aucun_remote
+
+[P5] Mission != autorit├® (cible choisie par le contexte)
+[PASS] P5_pas_de_chemin_injecte :: ('src/version.ts',)
+[PASS] P5_autorite_depuis_depot :: sources confin├®es au d├®p├┤t
+[PASS] P5_cible_est_fichier_depot :: scope=src/version.ts
+[PASS] P5_aucun_commit :: commits=1
+[PASS] P5_aucun_remote :: aucun push
+
+[P6] Aucun apply parasite sur BLOCK
+[PASS] P6_BLOCKED
+[PASS] P6_pas_apply_parasite :: aucune ├®criture par la boucle
+[PASS] P6_aucun_commit :: commits=1
+[PASS] P6_aucun_remote :: aucun push
+
+========================================================================
+R├ëSULTAT PHASE 2 : 22 PASS / 7 FAIL
+├ëCHECS : P1_final_APPLIED, P1_context_recheck_present, P1_fichier_modifie, P2_cause_context_stale, P2_block_at_recheck, P3_cause_context_stale, P4_cause_head
+========================================================================
+Context -> Agent Loop branch├®. CONTEXT_STALE -> BLOCK (double check).
+Cible d├®termin├®e par le contexte, jamais par le client.
+Aucun LLM. Aucun apply hors D5.9. Aucun commit/push. MemoLib non touch├®.

@@ -1,0 +1,17 @@
+[PRE] HEAD=fad3b20e status=''
+[RESP] http=200 status=BLOCKED state=BLOCKED can_approve=False
+[PROPOSAL] present=False diff_preview_len=0
+[PREVIEW] has proposal=False fichier_concerne=None
+[PUBLIC] 'technique' absent de vue = True
+[POST] HEAD=fad3b20e status=''
+
+[PASS2] via run_from_mission(REPLACE) + ApiFacade._public_view
+[PASS2] final_state=AWAIT_HUMAN diff_len=423 displayed=True
+[PASS2] scope=src/app/[locale]/legal/mentions-legales/page.tsx sha_before=77d43f9570c9 technique_absent=True
+[PASS2][POST] HEAD=fad3b20e status=''
+
+==== VERDICT ====
+MemoLib inchang├® (HEAD+status)      : True
+Proposition r├®elle AFFICH├ëE au front: True
+├ëtat serveur (passe fa├ºade)         : BLOCKED
+├ëtat moteur (passe d├®terministe)    : AWAIT_HUMAN

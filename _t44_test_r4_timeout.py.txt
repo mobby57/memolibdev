@@ -1,0 +1,77 @@
+========================================================================
+MEMOLIBDEV ÔÇö R4 : TIMEOUT PROVIDER (fail-closed, anti-fant├┤me)
+========================================================================
+
+[T1] Provider rapide < timeout -> OK
+[PASS] T1_OK :: LLM plan valid├® (intent d├®riv├®, 'old' pr├®sent, non
+[PASS] T1_intent :: REPLACE:version = '1.0':version = '2.0'
+
+[T2] Provider indisponible -> BLOCK
+[PASS] T2_BLOCK :: LLM: provider indisponible
+[PASS] T2_cause
+
+[T3+T4] Provider lent > timeout -> BLOCK + anti-fant├┤me
+[PASS] T3_BLOCK :: LLM: provider timeout > 1.5s (process termin├®, aucune ex├®cut
+[PASS] T3_cause_timeout :: LLM: provider timeout > 1.5s (process termin├®, aucune ex├®cut
+[PASS] T3_borne_reelle :: elapsed=1.58s (sleep=8s)
+[PASS] T4_pas_execution_fantome :: sentinelle absente -> provider r├®ellement interrompu
+
+[T5] R├®ponse vide -> BLOCK
+[PASS] T5_BLOCK :: LLM: r├®ponse vide / provider sans plan
+[PASS] T5_cause
+
+[T6] R├®ponse non parsable -> BLOCK
+[PASS] T6_BLOCK :: LLM: intent invalide / non parsable: ''
+[PASS] T6_cause
+
+[T7] Secret -> BLOCK avant provider
+[PASS] T7_BLOCK :: LLM: secret d├®tect├® dans le contexte (['openai_key
+[PASS] T7_cause
+
+[T8] HIGH + CLOUD -> BLOCK
+[PASS] T8_BLOCK :: LLM: risk=HIGH exige un provider LOCAL (provider=C
+[PASS] T8_cause
+
+[T9] Target hors authority_sources -> BLOCK
+[PASS] T9_BLOCK :: LLM: target_path hors authority_sources: ../../etc
+[PASS] T9_cause
+
+[T10] Control-plane -> BLOCK
+[PASS] T10_BLOCK :: LLM: target_path hors authority_sources: d59_contr
+
+[T11] Fragment 'old' absent -> BLOCK
+[PASS] T11_BLOCK :: LLM: fragment 'old' absent du contenu r├®el de la cible (├®vit
+[PASS] T11_cause
+
+[T12] CONTEXT_STALE avant apply -> BLOCK
+[FAIL] T12_chaine_applique :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration
+[FAIL] T12_context_recheck :: re-check pr├®sent
+[PASS] T12_aucun_commit :: commits=1
+[PASS] T12_aucun_remote
+
+[T13] Aucune approbation -> AWAIT_HUMAN
+[PASS] T13_AWAIT_HUMAN :: APPROVAL: d├®cision humaine requise (L6)
+[PASS] T13_aucun_commit :: commits=1
+[PASS] T13_aucun_remote
+
+[T14] Timeout dans la cha├«ne compl├¿te -> jamais APPLIED
+[PASS] T14_BLOCKED :: LLM ANALYZE/PLAN BLOCK: LLM: provider timeout > 1.5s (proces
+[PASS] T14_jamais_applied
+[PASS] T14_fichier_intact :: aucune ├®criture D5.9 apr├¿s timeout
+[PASS] T14_pas_de_D59 :: D5.9 jamais atteint
+[PASS] T14_aucun_commit :: commits=1
+[PASS] T14_aucun_remote
+
+[T15] Happy cha├«ne compl├¿te -> APPLIED propre
+[FAIL] T15_APPLIED :: V0.4.4-A TTL: ttl: approbation expir├®e (expiration
+[PASS] T15_not_committed
+[PASS] T15_aucun_commit :: commits=1
+[PASS] T15_aucun_remote
+
+========================================================================
+R├ëSULTAT R4 : 35 PASS / 3 FAIL
+├ëCHECS : T12_chaine_applique, T12_context_recheck, T15_APPLIED
+========================================================================
+Timeout = isolation processus + terminate (pas d'ex├®cution fant├┤me).
+Timeout -> BLOCK. Aucun fallback. Aucune D5.9 apr├¿s timeout.
+Aucun Ollama r├®el. Aucun commit/push. MemoLib non touch├®.

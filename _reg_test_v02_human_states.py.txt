@@ -1,0 +1,152 @@
+========================================================================
+MEMOLIBDEV ÔÇö TEST V0.2 ├®tats humains + front conversationnel
+========================================================================
+
+[H1] contrat des 14 ├®tats humains
+[PASS] H1 ├®tat UNDERSTANDING pr├®sent
+[PASS] H1 ├®tat INSPECTING pr├®sent
+[PASS] H1 ├®tat VERIFYING pr├®sent
+[PASS] H1 ├®tat ANALYZING pr├®sent
+[PASS] H1 ├®tat ANALYZED pr├®sent
+[PASS] H1 ├®tat PROPOSING pr├®sent
+[PASS] H1 ├®tat AWAITING_APPROVAL pr├®sent
+[PASS] H1 ├®tat EXECUTING pr├®sent
+[PASS] H1 ├®tat VERIFYING_RESULT pr├®sent
+[PASS] H1 ├®tat COMPLETED pr├®sent
+[PASS] H1 ├®tat REFUSED pr├®sent
+[PASS] H1 ├®tat BLOCKED pr├®sent
+[PASS] H1 ├®tat ROLLED_BACK pr├®sent
+[PASS] H1 ├®tat FAILED pr├®sent
+[PASS] H1 pas d'├®tat humain surnum├®raire :: []
+
+[H2] mapping ├®tats serveur r├®els -> ├®tats humains connus
+[PASS] H2 ANALYZING -> ANALYZING :: ANALYZING
+[PASS] H2 PROPOSAL_READY -> ANALYZED :: ANALYZED
+[PASS] H2 AWAITING_AUTHORIZATION -> AWAITING_APPROVAL :: AWAITING_APPROVAL
+[PASS] H2 AUTHORIZED -> EXECUTING :: EXECUTING
+[PASS] H2 EXECUTING -> EXECUTING :: EXECUTING
+[PASS] H2 VERIFYING -> VERIFYING_RESULT :: VERIFYING_RESULT
+[PASS] H2 COMPLETED -> COMPLETED :: COMPLETED
+[PASS] H2 REFUSED -> REFUSED :: REFUSED
+[PASS] H2 BLOCKED -> BLOCKED :: BLOCKED
+[PASS] H2 FAILED -> FAILED :: FAILED
+[PASS] H2 ROLLED_BACK -> ROLLED_BACK :: ROLLED_BACK
+[PASS] H2 QUESTION -> UNDERSTANDING :: UNDERSTANDING
+[PASS] H2 ANALYZED -> ANALYZED :: ANALYZED
+[PASS] H2 AWAIT_HUMAN -> AWAITING_APPROVAL :: AWAITING_APPROVAL
+[PASS] H2 APPLIED -> COMPLETED :: COMPLETED
+[PASS] H2 NO_PATCH_POSSIBLE -> BLOCKED :: BLOCKED
+[PASS] H2 OK -> ANALYZED :: ANALYZED
+[PASS] H2 ERROR -> FAILED :: FAILED
+
+[H3] terminal n├®gatif => is_success == False
+[PASS] H3 REFUSED is_success False :: human=REFUSED
+[PASS] H3 REFUSED is_negative True
+[PASS] H3 BLOCKED is_success False :: human=BLOCKED
+[PASS] H3 BLOCKED is_negative True
+[PASS] H3 FAILED is_success False :: human=FAILED
+[PASS] H3 FAILED is_negative True
+[PASS] H3 ROLLED_BACK is_success False :: human=ROLLED_BACK
+[PASS] H3 ROLLED_BACK is_negative True
+[PASS] H3 NO_PATCH_POSSIBLE is_success False :: human=BLOCKED
+[PASS] H3 NO_PATCH_POSSIBLE is_negative True
+[PASS] H3 ERROR is_success False :: human=FAILED
+[PASS] H3 ERROR is_negative True
+
+[H4] terminal de succ├¿s => is_success True
+[PASS] H4 ANALYZED -> ANALYZED succ├¿s
+[PASS] H4 PROPOSAL_READY -> ANALYZED succ├¿s
+[PASS] H4 COMPLETED -> COMPLETED succ├¿s
+[PASS] H4 APPLIED -> COMPLETED succ├¿s
+
+[H5] ├®tat inconnu/absent -> FAILED (jamais faux succ├¿s)
+[PASS] H5 None -> FAILED :: FAILED
+[PASS] H5 None non succ├¿s
+[PASS] H5 '' -> FAILED :: FAILED
+[PASS] H5 '' non succ├¿s
+[PASS] H5 '   ' -> FAILED :: FAILED
+[PASS] H5 '   ' non succ├¿s
+[PASS] H5 'PWNED' -> FAILED :: FAILED
+[PASS] H5 'PWNED' non succ├¿s
+[PASS] H5 'ADMIN' -> FAILED :: FAILED
+[PASS] H5 'ADMIN' non succ├¿s
+[PASS] H5 123 -> FAILED :: FAILED
+[PASS] H5 123 non succ├¿s
+[PASS] H5 to_human_state(None) == FAILED
+
+[H6] progression d├®terministe et coh├®rente
+[PASS] H6 d├®terministe
+[PASS] H6 7 ├®tapes dans l'ordre :: ['Comprendre', 'Examiner', 'Analyser', 'Proposer', 'D├®cider', 'Ex├®cuter', 'V├®rifier le r├®sultat']
+[PASS] H6 statuts monotones (done* current? todo*) :: ['done', 'done', 'current', 'todo', 'todo', 'todo', 'todo']
+
+[H7] terminal n├®gatif : aucune ├®tape 'done' trompeuse
+[PASS] H7 BLOCKED a une ├®tape courante (arr├¬t) :: [ProgressStep(key='ANALYSER', label='Analyser', status='current')]
+[PASS] H7 BLOCKED aucune ├®tape 'done' apr├¿s l'arr├¬t
+[PASS] H7 REFUSED a une ├®tape courante (arr├¬t) :: [ProgressStep(key='DECIDER', label='D├®cider', status='current')]
+[PASS] H7 REFUSED aucune ├®tape 'done' apr├¿s l'arr├¬t
+[PASS] H7 FAILED a une ├®tape courante (arr├¬t) :: [ProgressStep(key='EXECUTER', label='Ex├®cuter', status='current')]
+[PASS] H7 FAILED aucune ├®tape 'done' apr├¿s l'arr├¬t
+
+[H8] COMPLETED : succ├¿s r├®el
+[PASS] H8 message = Termin├®
+[PASS] H8 is_success True
+[PASS] H8 derni├¿re ├®tape done
+
+[H9] AWAITING_APPROVAL
+[PASS] H9 message d├®cision
+[PASS] H9 non terminal
+[PASS] H9 ├®tape courante = D├®cider :: ['DECIDER']
+
+[W1] front : static_provider
+[PASS] W1 / servi html
+[PASS] W1 /index.html servi html
+[PASS] W1 /mission -> None
+[PASS] W1 /approve -> None
+[PASS] W1 /admin -> None
+[PASS] W1 /secret -> None
+
+[W2] front : routes JS limit├®es
+[PASS] W2 routes = {/mission,/approve,/reject} :: ['/approve', '/mission', '/reject']
+
+[W3] front : navigateur non autoritaire
+[PASS] W3 pas de approved:true
+[PASS] W3 pas de authority_level ├®mis
+[PASS] W3 pas de certificate
+[PASS] W3 /approve n'envoie que run_id+approver :: run_id:currentRunId,approver:name
+
+[W4] front : technique masqu├® par d├®faut
+[PASS] W4 pas de 'd5.8' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'd5.9' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'sha256' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'evidence_sha' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'git apply' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'coder_authorization' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'controlled_apply' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 pas de 'memolibdev_target' hors d├®tails :: pr├®sent avant <details>
+[PASS] W4 section 'Voir les d├®tails techniques' pr├®sente
+[PASS] W4 d├®tails techniques dans un ├®l├®ment <details> (masqu├® par d├®faut)
+
+[W5] front : Core identique sans interface
+[PASS] W5 static_provider d├®faut = None
+[PASS] W5 do_GET -> 404 sans static_provider
+
+[W6] front : removabilit├® / non-intrusivit├®
+[PASS] W6 pas de subprocess :: ['__future__', 'api_facade', 'typing']
+[PASS] W6 pas de socketserver propre
+[PASS] W6 serve_ui d├®l├¿gue ├á api_facade.serve
+[PASS] W6 ne construit pas d'HumanApproval
+[PASS] W6 ne touche NI D5.8 NI D5.9
+
+[W7] front : miroir JS coh├®rent avec human_states
+[PASS] W7 toutes les cl├®s humaines pr├®sentes dans le JS :: []
+[PASS] W7 n├®gatif FAILED dans le JS NEGATIVE
+[PASS] W7 n├®gatif BLOCKED dans le JS NEGATIVE
+[PASS] W7 n├®gatif ROLLED_BACK dans le JS NEGATIVE
+[PASS] W7 n├®gatif REFUSED dans le JS NEGATIVE
+[PASS] W7 succ├¿s ANALYZED dans le JS SUCCESS
+[PASS] W7 succ├¿s COMPLETED dans le JS SUCCESS
+[PASS] W7 fail-safe JS -> FAILED
+
+========================================================================
+R├ëSULTAT V0.2 : 113 PASS / 0 FAIL
+========================================================================

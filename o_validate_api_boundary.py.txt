@@ -1,0 +1,45 @@
+========================================================================
+MEMOLIBDEV ÔÇö VALIDATION ADVERSARIALE FRONTI├êRE API
+========================================================================
+
+[1] Vrai moteur ÔÇö /mission READ_ONLY (aucun espion)
+[PASS] 1 http 200 :: 200
+[PASS] 1 intention UI = Comprendre
+[PASS] 1 working tree propre (aucune ├®criture READ_ONLY)
+[PASS] 1 HEAD inchang├® (aucun commit)
+[PASS] 1 run_id ├®mis
+
+[2+3] /approve hostile + cible hors p├®rim├¿tre -> blocage moteur
+[FAIL] 2 /approve r├®pond (relance via vrai moteur) :: 409
+[PASS] 3 cible hostile NON appliqu├®e (verdict != APPLIED) :: etat=None
+[PASS] 3 working tree TOUJOURS propre (aucune ├®criture hostile)
+[PASS] 3 HEAD inchang├® (aucun commit)
+[FAIL] 3 blocage justifi├® par le moteur (raison non vide)
+
+[3bis] cible control-plane -> blocage moteur
+[PASS] 3bis control-plane NON appliqu├® :: etat=None
+[PASS] 3bis working tree propre
+
+[4] Aucune ├®criture/commit/push hors sc├®nario autoris├®
+[PASS] 4 HEAD final == HEAD initial (aucun commit) :: d82876c9dd29e27baa727261d873ec1ad8e88b4b
+[PASS] 4 working tree final propre
+[PASS] 4 aucun remote (aucun push possible) :: ''
+
+[5] ├ëcoute 127.0.0.1 uniquement
+[PASS] 5 bind host = 127.0.0.1 :: 127.0.0.1
+[PASS] 5 d├®faut serve() = 127.0.0.1
+[PASS] 5 pas de bind 0.0.0.0 dans le source
+
+[6] Retrait temporaire fa├ºade -> moteur toujours op├®rationnel
+[PASS] 6 moteur importable+ex├®cutable SANS fa├ºade :: ENGINE_OK AWAIT_HUMAN 
+[PASS] 6 moteur n'a pas ├®crit (working tree propre)
+[PASS] 6 fa├ºade restaur├®e (r├®-import OK)
+
+[7] R├®gressions rejou├®es
+[PASS] 7 test_api_facade.py vert :: ========================================================================
+[PASS] 7 test_humanize.py vert :: Aucun LLM. Aucun git/apply/authorize. technique conserv´┐¢.
+
+========================================================================
+R├ëSULTAT VALIDATION : 21 PASS / 2 FAIL
+├ëCHECS : 2 /approve r├®pond (relance via vrai moteur), 3 blocage justifi├® par le moteur (raison non vide)
+========================================================================

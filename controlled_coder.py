@@ -25,6 +25,16 @@ Metering : réutilise le contrat 6A (operation_type="CODE").
 from __future__ import annotations
 
 from pathlib import Path
+
+from coder_authorization import (
+    ActionDossier,
+    AuthorityLevel,
+    CoderAuthorization,
+    HumanApproval,
+    authorization_to_dict,
+    validate_authorization,
+)
+from project_target import resolve_target
 from datetime import datetime
 import json
 import re
@@ -53,6 +63,11 @@ except ProjectTargetError as exc:
 
 REPORTS = V3 / "reports"
 PATCHES = V3 / "patches"
+
+# 5F.3.6 — certificat d'autorisation humaine.
+# Le Coder refuse de générer un patch tant qu'il n'existe
+# pas une autorisation AUTHORIZED liée à la cible exacte.
+AUTHORIZATION_REPORT = REPORTS / "coder-authorization.json"
 
 MODEL = "qwen2.5-coder:7b"
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -85,6 +100,163 @@ def load_latest_decision_report() -> Path:
         )
 
     return candidates[0]
+
+
+def load_coder_authorization(path: Path = AUTHORIZATION_REPORT) -> CoderAuthorization:
+    """
+    Charge le certificat d'autorisation 5F.3.6.
+
+    Fail closed :
+      - fichier absent
+      - JSON invalide
+      - status différent de AUTHORIZED
+      - structure incomplète
+
+    Aucun fallback automatique n'est autorisé.
+    """
+
+    if not path.is_file():
+        raise RuntimeError(
+            "AUTORISATION_ABSENTE: "
+            f"{path}"
+        )
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise RuntimeError(
+            f"AUTORISATION_JSON_INVALIDE: {exc}"
+        ) from exc
+
+    target_data = data.get("target")
+    action_data = data.get("action")
+    approval_data = data.get("human_approval")
+
+    if not isinstance(target_data, dict):
+        raise RuntimeError("AUTORISATION_TARGET_ABSENT")
+
+    if not isinstance(action_data, dict):
+        raise RuntimeError("AUTORISATION_ACTION_ABSENTE")
+
+    if not isinstance(approval_data, dict):
+        raise RuntimeError("AUTORISATION_HUMAN_APPROVAL_ABSENTE")
+
+    try:
+        authorization = CoderAuthorization(
+            path=str(data["path"]),
+            target=__import__(
+                "coder_authorization",
+                fromlist=["AuthorizationTarget"],
+            ).AuthorizationTarget(
+                git_root=str(target_data["git_root"]),
+                head=str(target_data["head"]),
+                repository_fingerprint=str(
+                    target_data["repository_fingerprint"]
+                ),
+            ),
+            evidence_status=str(data["evidence_status"]),
+            evidence_sha256=str(data["evidence_sha256"]),
+            provenance_status=str(data["provenance_status"]),
+            provenance_source_path=data.get(
+                "provenance_source_path"
+            ),
+            provenance_resolved_path=data.get(
+                "provenance_resolved_path"
+            ),
+            action=ActionDossier(
+                action_id=str(action_data["action_id"]),
+                action_type=str(action_data["action_type"]),
+                target_path=str(action_data["target_path"]),
+                risk=str(action_data["risk"]),
+                reversibility=str(action_data["reversibility"]),
+            ),
+            human_approval=HumanApproval(
+                approved=bool(approval_data["approved"]),
+                approver=str(approval_data["approver"]),
+                approved_at=str(approval_data["approved_at"]),
+                authority_level=str(
+                    approval_data["authority_level"]
+                ),
+            ),
+            human_validation_required=bool(
+                data["human_validation_required"]
+            ),
+            status=str(data["status"]),
+            reason=str(data["reason"]),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"AUTORISATION_STRUCTURE_INVALIDE: {exc}"
+        ) from exc
+
+    return authorization
+
+
+def enforce_coder_authorization(
+    authorization: CoderAuthorization,
+    target,
+    allowed_paths: list[str],
+) -> dict:
+    """
+    Barrière d'autorité du Controlled Coder.
+
+    Cette fonction doit réussir AVANT tout appel au modèle Coder.
+    """
+
+    if authorization.status != "AUTHORIZED":
+        return {
+            "verdict": "REJECT",
+            "reason": "CoderAuthorization non AUTHORIZED.",
+        }
+
+    valid, reason = validate_authorization(
+        authorization,
+        target,
+        authorization.path,
+        allowed_paths,
+    )
+
+    if not valid:
+        return {
+            "verdict": "REJECT",
+            "reason": reason,
+        }
+
+    if authorization.human_approval.approved is not True:
+        return {
+            "verdict": "REJECT",
+            "reason": "Validation humaine absente.",
+        }
+
+    if not authorization.human_approval.approver.strip():
+        return {
+            "verdict": "REJECT",
+            "reason": "Approbateur absent.",
+        }
+
+    if not authorization.human_approval.approved_at.strip():
+        return {
+            "verdict": "REJECT",
+            "reason": "Timestamp d'approbation absent.",
+        }
+
+    if authorization.human_approval.authority_level not in {
+        level.value for level in AuthorityLevel
+    }:
+        return {
+            "verdict": "REJECT",
+            "reason": "Niveau d'autorité invalide.",
+        }
+
+    return {
+        "verdict": "AUTHORIZED",
+        "reason": (
+            "Coder autorisé après validation de la cible, "
+            "de l'evidence, de la provenance, du scope, "
+            "de l'action et de l'approbation humaine."
+        ),
+        "authorization": authorization_to_dict(authorization),
+    }
 
 
 def load_plan_report(path: Path) -> dict:
@@ -378,57 +550,262 @@ def enforce_write_guardrail(
 # 5. VÉRIFICATION EN SANDBOX (git apply --check)
 # ============================================================
 
+class SandboxBoundaryError(RuntimeError):
+    """Violation of the 5G.1 sandbox boundary."""
+
+
+def _resolved_relative_path(path: str | Path) -> Path:
+    """
+    Normalise un chemin relatif destiné au sandbox.
+
+    Refuse :
+    - chemin absolu ;
+    - traversal `..` ;
+    - chemin vide.
+    """
+    raw = str(path).strip()
+
+    if not raw:
+        raise SandboxBoundaryError("Sandbox path vide")
+
+    candidate = Path(raw)
+
+    if candidate.is_absolute():
+        raise SandboxBoundaryError(
+            f"Sandbox path absolu interdit: {raw}"
+        )
+
+    normalized = Path(*candidate.parts)
+
+    if ".." in normalized.parts:
+        raise SandboxBoundaryError(
+            f"Sandbox path traversal interdit: {raw}"
+        )
+
+    return normalized
+
+
+def _assert_patch_outside_target(
+    patch_file: Path,
+    target_root: Path,
+) -> Path:
+    """
+    Le fichier patch est un artefact de MemoLibDev.
+    Il ne doit jamais être situé dans le repository cible.
+    """
+    patch = Path(patch_file).resolve()
+    root = Path(target_root).resolve()
+
+    try:
+        patch.relative_to(root)
+    except ValueError:
+        return patch
+
+    raise SandboxBoundaryError(
+        "Le patch_file est situé dans le repository cible MemoLib"
+    )
+
+
+def _assert_sandbox_boundary(
+    sandbox: Path,
+    target_root: Path,
+) -> Path:
+    """
+    Vérifie que le sandbox est bien distinct du repository cible.
+    """
+    sandbox_root = Path(sandbox).resolve()
+    target = Path(target_root).resolve()
+
+    if sandbox_root == target:
+        raise SandboxBoundaryError(
+            "Le sandbox ne peut pas être le repository cible"
+        )
+
+    try:
+        sandbox_root.relative_to(target)
+    except ValueError:
+        return sandbox_root
+
+    raise SandboxBoundaryError(
+        "Le sandbox ne peut pas être situé à l'intérieur de MemoLib"
+    )
+
+
+def _remove_sandbox(sandbox: Path) -> None:
+    """
+    Supprime le sandbox de manière robuste sous Windows.
+
+    Les fichiers .git/objects peuvent être en lecture seule.
+    Toute erreur de suppression est propagée : le Sandbox Gate
+    ne doit jamais masquer un échec de cleanup.
+    """
+    import os
+    import stat
+
+    sandbox = Path(sandbox)
+
+    if not sandbox.exists():
+        return
+
+    def _onerror(func, path, exc_info):
+        try:
+            os.chmod(path, stat.S_IWRITE)
+            func(path)
+        except Exception:
+            raise
+
+    shutil.rmtree(
+        sandbox,
+        onerror=_onerror,
+    )
+
+    if sandbox.exists():
+        raise SandboxBoundaryError(
+            f"Sandbox cleanup incomplete: {sandbox}"
+        )
+
 def verify_patch_in_sandbox(
     diff_text: str,
     touched_paths: set[str],
     patch_file: Path,
 ) -> dict:
     """
-    Copie UNIQUEMENT les fichiers touchés dans un dépôt git temporaire,
-    puis exécute `git apply --check`. Ne touche jamais MemoLib.
+    5G.1 SANDBOX GATE
+
+    Copie UNIQUEMENT les fichiers touchés depuis MemoLib vers
+    un dépôt Git temporaire distinct, puis vérifie le patch avec
+    `git apply --check`.
+
+    Cette fonction :
+    - ne modifie jamais MemoLib ;
+    - refuse un patch situé dans MemoLib ;
+    - refuse les chemins absolus ;
+    - refuse les traversées `..` ;
+    - exécute Git uniquement avec cwd=sandbox ;
+    - détruit toujours le sandbox.
     """
 
-    sandbox = Path(tempfile.mkdtemp(prefix="memolibdev-5g-"))
+    target = resolve_target()
+    target_root = Path(target.git_root).resolve()
 
-    def run_git(*args):
-        return subprocess.run(
-            ["git", *args],
-            cwd=sandbox,
-            text=True,
-            capture_output=True,
-        )
+    sandbox = Path(
+        tempfile.mkdtemp(prefix="memolibdev-5g-")
+    ).resolve()
 
     try:
-        run_git("init", "-q")
-        run_git("config", "user.email", "sandbox@memolibdev.local")
-        run_git("config", "user.name", "memolibdev-sandbox")
+        _assert_sandbox_boundary(
+            sandbox,
+            target_root,
+        )
 
-        # Copier les fichiers touchés (read-only depuis MemoLib).
+        patch = _assert_patch_outside_target(
+            patch_file,
+            target_root,
+        )
+
+        def run_git(*args):
+            return subprocess.run(
+                ["git", *args],
+                cwd=sandbox,
+                text=True,
+                capture_output=True,
+            )
+
+        init = run_git("init", "-q")
+
+        if init.returncode != 0:
+            raise SandboxBoundaryError(
+                "Impossible d'initialiser le dépôt Git sandbox"
+            )
+
+        run_git(
+            "config",
+            "user.email",
+            "sandbox@memolibdev.local",
+        )
+
+        run_git(
+            "config",
+            "user.name",
+            "memolibdev-sandbox",
+        )
+
         copied = []
 
-        for rel in sorted(touched_paths):
+        for raw_rel in sorted(touched_paths):
+
+            rel = _resolved_relative_path(raw_rel)
+
             try:
-                source = safe_target(rel)
-            except ValueError:
-                continue
+                source = safe_target(str(rel))
+            except ValueError as exc:
+                raise SandboxBoundaryError(
+                    f"Fichier source hors cible: {raw_rel}"
+                ) from exc
+
+            source = source.resolve()
+
+            try:
+                source.relative_to(target_root)
+            except ValueError as exc:
+                raise SandboxBoundaryError(
+                    f"Source hors repository cible: {raw_rel}"
+                ) from exc
 
             if not source.exists():
                 continue
 
-            dest = sandbox / rel
-            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest = (sandbox / rel).resolve()
+
+            try:
+                dest.relative_to(sandbox)
+            except ValueError as exc:
+                raise SandboxBoundaryError(
+                    f"Destination sandbox hors périmètre: {raw_rel}"
+                ) from exc
+
+            dest.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
             shutil.copy2(source, dest)
-            copied.append(rel)
+            copied.append(str(rel).replace("\\", "/"))
 
         if copied:
-            run_git("add", "-A")
-            run_git("commit", "-q", "-m", "sandbox baseline")
+            add = run_git("add", "-A")
 
-        check = run_git("apply", "--check", "--verbose", str(patch_file))
+            if add.returncode != 0:
+                raise SandboxBoundaryError(
+                    "git add sandbox échoué"
+                )
+
+            commit = run_git(
+                "commit",
+                "-q",
+                "-m",
+                "sandbox baseline",
+            )
+
+            if commit.returncode != 0:
+                raise SandboxBoundaryError(
+                    "git commit sandbox échoué"
+                )
+
+        check = run_git(
+            "apply",
+            "--check",
+            "--verbose",
+            str(patch),
+        )
 
         applicable = check.returncode == 0
 
-        stat = run_git("apply", "--stat", str(patch_file))
+        stat = run_git(
+            "apply",
+            "--stat",
+            str(patch),
+        )
 
         return {
             "applicable": applicable,
@@ -436,10 +813,13 @@ def verify_patch_in_sandbox(
             "stderr": check.stderr.strip(),
             "stat": stat.stdout.strip(),
             "sandbox_files": copied,
+            "sandbox": str(sandbox),
+            "target_root": str(target_root),
+            "patch_file": str(patch),
         }
 
     finally:
-        shutil.rmtree(sandbox, ignore_errors=True)
+        _remove_sandbox(sandbox)
 
 
 # ============================================================
@@ -476,6 +856,48 @@ def main() -> int:
     objective = plan.get("objective", "") if isinstance(plan, dict) else ""
 
     allowed_paths = selected_paths(report)
+
+    # --------------------------------------------------------
+    # 5F.3.6 — HUMAN AUTHORIZATION GATE
+    #
+    # IMPORTANT :
+    # Ce contrôle intervient AVANT read_selected_files()
+    # et surtout AVANT ask_ollama().
+    #
+    # Aucun certificat = aucun Coder.
+    # --------------------------------------------------------
+
+    print("")
+    print("=== 5F.3.6 CODER AUTHORIZATION ===")
+
+    try:
+        target = resolve_target()
+        authorization = load_coder_authorization()
+    except Exception as exc:
+        print("[BLOCK] Coder non autorisé :", exc)
+        print("[BLOCK] Ollama ne sera PAS appelé.")
+        print("[BLOCK] Aucun patch ne sera généré.")
+        return 2
+
+    authorization_gate = enforce_coder_authorization(
+        authorization,
+        target,
+        allowed_paths,
+    )
+
+    print("Authorization :", authorization_gate["verdict"])
+    print("Reason        :", authorization_gate["reason"])
+
+    if authorization_gate["verdict"] != "AUTHORIZED":
+        print("[BLOCK] CoderAuthorization rejetée.")
+        print("[BLOCK] Ollama ne sera PAS appelé.")
+        print("[BLOCK] Aucun patch ne sera généré.")
+        return 2
+
+    print("[PASS] Human Approval validée.")
+    print("[PASS] CoderAuthorization AUTHORIZED.")
+    print("[PASS] Cible liée au ProjectTarget.")
+    print("[PASS] Scope lié à la sélection déterministe.")
 
     print("Fichiers autorisés :", len(allowed_paths))
     for p in allowed_paths:
@@ -643,3 +1065,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

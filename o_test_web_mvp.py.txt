@@ -1,0 +1,60 @@
+========================================================================
+MEMOLIBDEV ÔÇö TEST front MVP (web_mvp)
+========================================================================
+
+[W1] static_provider sert la page
+[PASS] W1 / servi :: False
+[PASS] W1 / content-type html :: text/html; charset=utf-8
+[PASS] W1 / octets non vides
+[PASS] W1 /index.html servi :: False
+[PASS] W1 /index.html content-type html :: text/html; charset=utf-8
+[PASS] W1 /index.html octets non vides
+
+[W2] query/fragment ignor├®s
+[PASS] W2 /?x=1 servi
+[PASS] W2 /#a servi
+[PASS] W2 /index.html?v=2 servi
+
+[W3] routes inconnues -> None (404 serveur)
+[PASS] W3 /mission -> None :: None
+[PASS] W3 /approve -> None :: None
+[PASS] W3 /reject -> None :: None
+[PASS] W3 /admin -> None :: None
+[PASS] W3 /secret -> None :: None
+[PASS] W3 /..%2f -> None :: None
+
+[W4] Core identique sans front (make_handler d├®faut)
+[PASS] W4 static_provider par d├®faut = None
+[PASS] W4 do_GET renvoie 404 si static_provider None
+
+[W5] aucun secret technique dans le HTML
+[FAIL] W5 aucun terme technique sensible :: leaks=['authorization']
+[PASS] W5 pas de 'run_id' affich├® en dur comme label
+
+[W6] routes appel├®es par le JS
+[PASS] W6 routes = {/mission,/approve,/reject} :: ['/approve', '/mission', '/reject']
+
+[W7] le navigateur ne fabrique pas d'autorit├®
+[PASS] W7 pas de approved:true ├®mis
+[PASS] W7 pas de authority_level ├®mis
+[PASS] W7 pas de certificate ├®mis
+[PASS] W7 /approve n'envoie que run_id+approver ::  run_id: currentRunId, approver: name 
+
+[W8] robustesse : anti-double-submit + timeout client
+[PASS] W8 verrou busy
+[PASS] W8 timeout AbortController
+[PASS] W8 message de timeout lisible
+[PASS] W8 aper├ºu avant approbation (can_approve pilote l'UI)
+[PASS] W8 avertissement d'effet
+[PASS] W8 boutons Refuser et Autoriser
+
+[W9] removabilit├® / non-intrusivit├®
+[PASS] W9 pas de subprocess :: ['__future__', 'api_facade', 'typing']
+[PASS] W9 pas de socket/httpserver propre
+[PASS] W9 serve_mvp d├®l├¿gue ├á api_facade.serve
+[PASS] W9 web_mvp ne construit pas d'HumanApproval
+
+========================================================================
+R├ëSULTAT FRONT MVP : 33 PASS / 1 FAIL
+├ëCHECS : W5 aucun terme technique sensible
+========================================================================

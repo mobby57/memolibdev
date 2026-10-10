@@ -1,0 +1,59 @@
+========================================================================
+MEMOLIBDEV ÔÇö D6.1 FILE TARGET (sandbox ├®ph├®m├¿re)
+========================================================================
+
+[T1] Fichier textuel existant
+[PASS] T1_path :: src/app.ts
+[PASS] T1_format :: .ts
+[PASS] T1_kind :: CODE
+[PASS] T1_size :: 20
+[PASS] T1_sha256 :: b40dedde60828bf6 == b40dedde60828bf6
+[PASS] T1_git_root :: C:\Users\moros\AppData\Local\Temp\memolibdev-d61-m5hrasq5
+[PASS] T1_git_head :: ca36a4fc3e68
+[PASS] T1_permissions :: READ_ONLY
+[PASS] T1_scope :: src/app.ts
+[PASS] T1_risk :: MEDIUM
+[PASS] T1_textual :: True
+[PASS] T1_adapter :: code_adapter
+
+[T2] Fichier binaire (xlsx)
+[PASS] T2_format :: .xlsx
+[PASS] T2_kind :: SHEET
+[PASS] T2_textual :: False
+[PASS] T2_adapter :: xlsx_adapter
+[PASS] T2_sha256 :: 5c13d0665ab80ccb == 5c13d0665ab80ccb
+
+[T3] Fichier CSV
+[PASS] T3_kind :: DATA
+[PASS] T3_textual :: True
+
+[T4] Fichier Markdown
+[PASS] T4_kind :: DOC
+[PASS] T4_textual :: True
+
+[T5] Chemin hors p├®rim├¿tre
+[PASS] T5_hors_perimetre_BLOCK :: Chemin hors p├®rim├¿tre du d├®p├┤t : ../../etc/passwd
+
+[T6] Acc├¿s .git
+[PASS] T6_git_BLOCK :: Acc├¿s .git interdit : .git/config
+
+[T7] Fichier absent
+[PASS] T7_absent_BLOCK :: Fichier absent : inexistant.py (r├®solu: C:\Users\moros\AppDa
+
+[T8] SHA change si fichier modifi├®
+[PASS] T8_SHA_different :: before=b40dedde6082 after=75758b734961
+
+[T9] Risk level param├®trable
+[PASS] T9_risk_HIGH :: HIGH
+
+[T10] Immutabilit├®
+[PASS] T10_frozen :: frozen dataclass
+
+[INT├ëGRIT├ë]
+[PASS] cible_inchangee :: contenu restaur├®
+
+========================================================================
+R├ëSULTAT D6.1 : 28 PASS / 0 FAIL
+========================================================================
+FileTarget D├ëCRIT sans MODIFIER. Aucune ├®criture cible.
+Aucun Ollama. Aucun patch. Aucun commit/push.

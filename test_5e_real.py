@@ -407,6 +407,57 @@ Structure ta réponse ainsi :
 5. VÉRIFICATIONS COMPLÉMENTAIRES
 6. PROCHAINE ÉTAPE
 
+RÈGLE DE PREUVE OBLIGATOIRE :
+
+Pour CHAQUE constat factuel important, utilise obligatoirement ce format :
+
+STATUT: CONFIRME
+
+FICHIER:
+<un chemin EXACT provenant uniquement des fichiers réellement fournis>
+
+PREUVE:
+<un élément technique concret réellement observable dans le contenu inspecté :
+fonction, appel, condition, variable, route, middleware, statut HTTP,
+configuration ou extrait court>
+
+CONSTAT:
+<ce que cette preuve permet réellement d'affirmer>
+
+LIMITE:
+<ce que la preuve ne permet pas de conclure, si nécessaire>
+
+Un constat factuel sans preuve technique concrète doit être classé
+dans HYPOTHÈSES ou VÉRIFICATIONS COMPLÉMENTAIRES, et non dans
+CONSTATS FACTUELS.
+
+RÈGLES STRICTES DE GROUNDING :
+
+- Chaque FICHIER utilisé dans une preuve doit appartenir aux fichiers
+  réellement fournis et inspectés.
+- Ne cite jamais un fichier uniquement parce que son nom semble logique.
+- Ne prétends jamais avoir inspecté un fichier qui n'est pas fourni.
+- Si un fichier supplémentaire serait nécessaire, mentionne-le
+  uniquement dans VÉRIFICATIONS COMPLÉMENTAIRES.
+- Ne transforme jamais une recommandation en constat factuel.
+- Ne considère jamais la simple présence d'un nom de fonction ou d'un
+  fichier comme une preuve suffisante : relie la preuve au constat.
+- N'invente aucun extrait de code.
+- Si aucune preuve suffisante n'existe, indique explicitement :
+  PREUVE: insuffisante.
+
+Pour les HYPOTHÈSES, utilise :
+
+STATUT: POSSIBLE
+
+et explique clairement qu'il s'agit d'une hypothèse non démontrée
+par les fichiers inspectés.
+
+Pour les éléments qui nécessitent une inspection supplémentaire,
+utilise VÉRIFICATIONS COMPLÉMENTAIRES et indique le fichier ou
+l'information supplémentaire nécessaire, sans prétendre l'avoir
+inspecté.
+
 Si les fichiers fournis ne permettent pas de conclure,
 dis-le explicitement.
 
@@ -428,7 +479,7 @@ def call_ollama(prompt: str) -> tuple[str, dict]:
         "stream": False,
         "options": {
             "temperature": 0,
-            "num_predict": 256
+            "num_predict": 1024
         }
     }
 
@@ -445,7 +496,7 @@ def call_ollama(prompt: str) -> tuple[str, dict]:
 
     with urllib.request.urlopen(
         request_http,
-        timeout=180
+        timeout=240
     ) as response:
 
         data = json.loads(
@@ -461,6 +512,8 @@ def call_ollama(prompt: str) -> tuple[str, dict]:
         "Réponse Ollama vide."
     )
 
+    generation_complete = data.get("done_reason") != "length"
+
     return answer, {
         "elapsed_seconds": elapsed,
         "model": MODEL,
@@ -469,6 +522,18 @@ def call_ollama(prompt: str) -> tuple[str, dict]:
         "stream": False,
         "prompt_chars": len(prompt),
         "response_chars": len(answer),
+
+        # Métadonnées natives Ollama — observation uniquement.
+        "done": data.get("done"),
+        "done_reason": data.get("done_reason"),
+        "generation_complete": generation_complete,
+        "generation_truncated": not generation_complete,
+        "eval_count": data.get("eval_count"),
+        "eval_duration": data.get("eval_duration"),
+        "prompt_eval_count": data.get("prompt_eval_count"),
+        "prompt_eval_duration": data.get("prompt_eval_duration"),
+        "load_duration": data.get("load_duration"),
+        "total_duration": data.get("total_duration"),
     }
 
 
@@ -536,7 +601,7 @@ def main():
     print("[5] OLLAMA")
     print(f"Model : {MODEL}")
     print("Temperature : 0")
-    print("Timeout : 180 secondes")
+    print("Timeout : 240 secondes")
 
     try:
 
@@ -577,6 +642,31 @@ def main():
             if isinstance(item, dict)
         ],
     )
+
+    # Contrôle de complétude de génération Ollama.
+    # Une réponse interrompue par la limite de tokens ne peut pas
+    # être considérée comme pleinement acceptable.
+    generation_complete = meta.get(
+        "generation_complete",
+        True
+    )
+
+    generation_truncated = meta.get(
+        "generation_truncated",
+        False
+    )
+
+    if generation_truncated:
+        validation["verdict"] = "REVIEW"
+        validation["generation_complete"] = False
+        validation["generation_truncated"] = True
+        validation.setdefault("reasons", []).append(
+            "La réponse Ollama est tronquée : "
+            "done_reason=length."
+        )
+    else:
+        validation["generation_complete"] = generation_complete
+        validation["generation_truncated"] = False
 
     print(
         json.dumps(

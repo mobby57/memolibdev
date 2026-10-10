@@ -1,0 +1,47 @@
+========================================================================
+MEMOLIBDEV ÔÇö D6.2 CODE ADAPTER (sandbox ├®ph├®m├¿re)
+========================================================================
+
+[A] Admission formats
+[PASS] A1_ts_accepted :: CODE
+[PASS] A2_py_accepted :: CODE
+[PASS] A3_tsx_accepted :: CODE
+[PASS] A4_xlsx_rejected :: code_adapter refuse les fichiers non textuels (kind=SHEET, f
+
+[B] Contrat adaptateur (read->validate)
+[PASS] B1_read :: 76 chars
+[PASS] B2_analyze_lines :: 4
+[PASS] B3_analyze_functions :: ['hello']
+[PASS] B4_plan_changes :: Replace 'version = '1.0'' with 'version = '2.0''
+[PASS] B5_modify_applied
+[PASS] B6_modify_no_disk :: contenu diff├®rent en m├®moire
+[PASS] B7_validate_pass :: Transformation valide
+[PASS] B8_validate_empty_BLOCK :: Le nouveau contenu est vide
+
+[C] Diff d├®terministe + applicabilit├®
+[PASS] C1_diff_generated :: 228 chars
+[PASS] C2_git_apply_check :: applicable
+
+[D] Blocs s├®curit├®
+[PASS] D1_hors_perimetre :: BLOCK
+[PASS] D2_diff_hors_scope :: ['src/NOTINSCOPE.ts']
+[PASS] D3_diff_corrompu :: git apply --check ├®choue
+[PASS] D4_sha_incorrecte_BLOCK :: evidence SHA-256 mismatch: cert=0000000000000000 actuel=efa1
+
+[E] Cha├«ne D5.9 APPLIED
+[PASS] E1_status_APPLIED :: POST_VERIFY PASS: marqueur version 2.0
+[PASS] E2_not_committed
+[PASS] E3_working_tree_modified :: fichier modifi├®
+[PASS] E4_aucun_nouveau_commit :: commits=1
+
+[F] Cha├«ne D5.9 ROLLBACK
+[PASS] F1_status_ROLLED_BACK :: POST_VERIFY FAIL: v├®rification volontairement ├®chou├®e
+[PASS] F2_sha_restored :: efa1c97726f8 == efa1c97726f8
+[PASS] F3_not_committed
+
+========================================================================
+R├ëSULTAT D6.2 : 25 PASS / 0 FAIL
+========================================================================
+code_adapter : FileTarget -> read -> analyze -> plan -> modify -> validate
+               -> generate_diff -> D5.8 guardrails -> D5.9 APPLIED/ROLLBACK
+Aucun Ollama. MemoLib non touch├®. Aucun commit/push.

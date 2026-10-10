@@ -1,0 +1,46 @@
+========================================================================
+MEMOLIBDEV ÔÇö TESTS ADVERSARIAUX ANALYSER (V0.1.2)
+========================================================================
+
+[AX1] faux signal AUTH (import seul)
+[PASS] AX1 un import signIn ne donne PAS une cause HIGH :: confiance=MEDIUM cause=non
+[PASS] AX1 l'import reste un FAIT observable
+
+[AX2] faux signal REDIRECT (valide)
+[PASS] AX2 pr├®sence de 'redirect' ne constitue PAS une cause :: confiance=MEDIUM cause=non
+
+[AX3] causes multiples -> pas de choix arbitraire
+[PASS] AX3 pas de d├®signation arbitraire d'un seul fichier parmi deux :: cause=''
+[PASS] AX3 pluralit├® refl├®t├®e (incertitude ou confiance r├®duite) :: confiance=MEDIUM
+
+[AX4] preview tronqu├® -> cause None/MEDIUM/LOW + incertitude
+[PASS] AX4 pas de cause HIGH sur preview tronqu├® :: confiance=LOW
+[PASS] AX4 incertitude explicite (budget/contenu) :: ("Le contenu inspect├® est born├® par un budget : des portions de fichiers n'ont pas ├®t├® examin├®es.", 'Des ├®l├®ments ont ├®t├® observ├®s, mais aucun ne se rattache directement au domaine de la demande.', 'Le contenu disponible ne permet pas de confirmer la cause.')
+
+[AX5] fichier causal absent -> jamais de cause ├®tablie dessus
+[PASS] AX5 aucun fait ne cite un fichier hors contexte
+[PASS] AX5 aucune cause attribu├®e (fichier causal absent) :: cause=non
+[PASS] AX5 'middleware' n'appara├«t pas comme cause invent├®e
+
+[AX6] fait pertinent mais non causal -> fait oui, cause non
+[PASS] AX6 le fait AUTH est bien list├®
+[PASS] AX6 mais aucune cause HIGH n'en est tir├®e :: confiance=MEDIUM
+
+[AX7] co├»ncidence lexicale -> aucune conclusion causale
+[PASS] AX7 aucune cause automatique sur simple co├»ncidence lexicale :: confiance=LOW cause=non
+
+[AX8] preuves insuffisantes -> LOW + incertitudes
+[PASS] AX8 confiance LOW :: LOW
+[PASS] AX8 aucune cause
+[PASS] AX8 incertitudes pr├®sentes
+
+[AX9] source invalide -> rejet strict
+[PASS] AX9 tous les faits proviennent du seul fichier du contexte :: ['src/only.ts']
+[PASS] AX9 elements_examines Ôèå contexte
+
+[AX10] contradiction -> explicit├®e, jamais masqu├®e
+[PASS] AX10 la divergence n'est pas masqu├®e par une cause HIGH tranch├®e :: confiance=MEDIUM incert=("Plusieurs fichiers pr├®sentent des ├®l├®ments comparables pouvant expliquer le probl├¿me (src/app/api/x/route.ts, src/app/api/y/route.ts) : les preuves disponibles ne permettent pas de les d├®partager. Aucune cause unique n'est attribu├®e.", 'Le contenu disponible ne permet pas de confirmer la cause.')
+
+========================================================================
+R├ëSULTAT ADVERSARIAL : 19 PASS / 0 FAIL
+========================================================================

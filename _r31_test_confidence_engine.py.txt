@@ -1,0 +1,85 @@
+========================================================================
+MEMOLIBDEV ÔÇö TEST CONFIDENCE ENGINE (V0.3.1)
+========================================================================
+
+[1] d├®terminisme
+[PASS] 1 analysis d├®terministe :: HIGH
+[PASS] 1 proposal d├®terministe :: HIGH
+
+[2] HIGH correctement ├®tay├®
+[PASS] 2 un locus causal unique -> HIGH :: HIGH score=7
+[PASS] 2 raisons explicables pr├®sentes
+
+[3] MEDIUM ambigu (pr├®sence isol├®e)
+[PASS] 3 pr├®sence isol├®e -> pas HIGH :: LOW
+
+[4] LOW insuffisant
+[PASS] 4 aucun preview -> LOW :: LOW
+
+[5] contradiction
+[PASS] 5 contradiction -> max MEDIUM :: MEDIUM
+[PASS] 5 gate contradiction list├® :: ('G4 contradiction critique -> max MEDIUM',)
+
+[6] plusieurs loci forts
+[PASS] 6 >=2 loci -> pas HIGH :: MEDIUM
+[PASS] 6 gate G3 list├® :: ('G3 plusieurs loci causaux forts -> max MEDIUM',)
+
+[7] SHA absent
+[PASS] 7 SHA absent abaisse le score vs pr├®sent :: 4 < 7
+[PASS] 7 proposal sans SHA frais -> pas HIGH :: MEDIUM
+
+[8] contexte p├®rim├®
+[PASS] 8 analysis stale -> LOW :: LOW
+[PASS] 8 proposal stale -> LOW :: LOW
+[PASS] 8 gate G1 list├® :: ('G1 contexte p├®rim├® (is_stale) -> LOW',)
+
+[9] scope incoh├®rent
+[PASS] 9 analysis scope non v├®rifiable -> pas HIGH :: MEDIUM
+[PASS] 9 proposal scope non v├®rifiable -> pas HIGH :: MEDIUM
+[PASS] 9 gate G7 list├® :: ('G7 scope non v├®rifiable -> jamais HIGH',)
+
+[10] diff absent
+[PASS] 10 pas de diff -> LOW :: LOW
+[PASS] 10 gate G5 list├® :: ('G5 proposition sans diff -> LOW',)
+
+[11] validation du diff KO
+[PASS] 11 diff invalide -> LOW :: LOW
+[PASS] 11 gate G6 list├® :: ('G6 validation du diff KO -> LOW',)
+
+[12] anti-gaming (volume)
+[PASS] 12a 50 fichiers 1-cat├®gorie -> pas HIGH :: LOW
+[PASS] 12b 40 mots-cl├®s IMPORT -> pas HIGH :: LOW
+[PASS] 12c proposal : aucun facteur 'taille/volume' dans la signature :: ('has_diff', 'diff_valid', 'diff_deterministic', 'scope_verifiable', 'has_fresh_sha', 'is_stale', 'causal_evidence', 'contradiction', 'reasons', 'gates', 'evidence', 'score', 'level')
+
+[13] d├®duplication des preuves
+[PASS] 13 preuves r├®p├®t├®es -> m├¬me niveau :: HIGH == HIGH
+[PASS] 13 preuves r├®p├®t├®es -> m├¬me score :: 7 == 7
+
+[14] s├®paration analysis/proposal
+[PASS] 14 dimension ANALYSIS :: ANALYSIS
+[PASS] 14 dimension PROPOSAL :: PROPOSAL
+[PASS] 14 signatures distinctes (proposal n'a pas relevant_facts)
+
+[15] absence de LLM / IO (analyse statique)
+[PASS] 15 aucun import LLM/IO/r├®seau :: imports=['__future__', 'dataclasses', 'typing']
+[PASS] 15 aucune d├®pendance circulaire (analysis_builder/proposal/agent_loop) :: ['__future__', 'dataclasses', 'typing']
+
+[16] bornes du score
+[PASS] 16 score <= SCORE_MAX :: 8
+[PASS] 16 score >= SCORE_MIN :: 8
+[PASS] 16 proposal score born├® :: 8
+
+[17] raisons explicables
+[PASS] 17 chaque raison est une phrase lisible non vide :: ("Un lieu causal unique et coh├®rent ('src/a.ts', cat├®gories CONDITION, REDIRECT).", "Au moins deux indices comportementaux d├®dupliqu├®s ├®tayent l'observation.", 'Les faits sont ancr├®s sur une version v├®rifiable (SHA).', 'Le p├®rim├¿tre (scope) est coh├®rent et v├®rifiable.')
+[PASS] 17 evidence_used non vide quand preuve :: ('locus=src/a.ts categories=CONDITION,REDIRECT', 'sha=present')
+
+[NR] non-r├®gression : compat analysis_builder._confidence
+[PASS] NR 1 locus -> HIGH + 1 strong
+[PASS] NR 2 loci -> MEDIUM + 2 strong
+[PASS] NR isol├® -> MEDIUM + 0 strong
+[PASS] NR rien -> LOW
+[PASS] NR analysis_builder._confidence d├®l├¿gue (HIGH, 1 strong) :: HIGH 1
+
+========================================================================
+R├ëSULTAT CONFIDENCE ENGINE : 42 PASS / 0 FAIL
+========================================================================

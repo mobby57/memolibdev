@@ -1,0 +1,65 @@
+========================================================================
+MEMOLIBDEV ù TEST humanize (brique B)
+========================================================================
+
+[H1] ╔tats -> messages dÚterministes
+[PASS] H1_QUESTION :: J'ai besoin d'une prÚcision avant de continuer.
+[PASS] H1_AWAIT_HUMAN :: J'ai prÚparÚ une proposition. Rien n'a ÚtÚ modifiÚ
+[PASS] H1_BLOCKED :: Je ne peux pas continuer dans ces conditions.
+[PASS] H1_APPLIED :: La modification a ÚtÚ effectuÚe puis vÚrifiÚe.
+[PASS] H1_ROLLED_BACK :: La modification n'a pas ÚtÚ conservÚe. Le projet a
+[PASS] H1_NO_PATCH_POSSIBLE :: Je n'ai pas trouvÚ de modification pertinente Ó pr
+[PASS] H1_ERROR :: Une erreur est survenue. Aucune modification n'a Ú
+
+[H2] Mapping modes -> contr¶le
+[PASS] H2_READ_ONLY :: READ_ONLY -> Observer
+[PASS] H2_PROPOSE :: PROPOSE -> PrÚparer
+[PASS] H2_SANDBOX :: SANDBOX -> Tester
+[PASS] H2_SUPERVISED_APPLY :: SUPERVISED_APPLY -> Modifier
+[PASS] H2_inconnu_observer
+
+[H3] action_requise
+[PASS] H3_question_precise :: PrÚciser : navigation ou affichage ?
+[PASS] H3_question_defaut
+[PASS] H3_await_autoriser :: Vous pouvez autoriser ou refuser cette proposition.
+[PASS] H3_APPLIED_aucune_action :: action=None
+[PASS] H3_ROLLED_BACK_aucune_action :: action=None
+[PASS] H3_BLOCKED_aucune_action :: action=None
+[PASS] H3_NO_PATCH_POSSIBLE_aucune_action :: action=None
+[PASS] H3_ERROR_aucune_action :: action=None
+[PASS] H3_OK_aucune_action :: action=None
+
+[H4] report=None
+[PASS] H4_technique_none
+[PASS] H4_verifie_vide
+
+[H5] ERROR
+[PASS] H5_error_resultat :: Une erreur est survenue. Aucune modification n'a ÚtÚ effectuÚe.
+[PASS] H5_error_pourquoi_fallback :: reason absent -> message en fallback
+
+[H6] technique conservÚ
+[PASS] H6_technique_present
+[PASS] H6_technique_committed
+[PASS] H6_verifie_depuis_steps :: ('application contr¶lÚe effectuÚe', 'rÚsultat vÚrifiÚ')
+
+[H7] DÚterminisme
+[PASS] H7_deterministe :: deux appels identiques
+
+[H8] PuretÚ / imports interdits
+[PASS] H8_aucun_import_dangereux :: imports=['__future__', 'dataclasses', 'typing']
+[PASS] H8_pas_appel_dangereux :: appels interdits=[]
+[PASS] H8_docstring_documente_invariant :: la rÞgle d'architecture est documentÚe
+
+[H9] FidÚlitÚ (anti-invention)
+[PASS] H9_await_pas_de_fait_corrige :: AWAIT_HUMAN ne prÚtend aucune modification
+[PASS] H9_await_dit_rien_modifie
+[PASS] H9_question_pas_diagnostic
+[PASS] H9_blocked_pas_succes
+[PASS] H9_applied_peut_dire_effectuee
+[PASS] H9_pourquoi_fidele :: pourquoi reprend reason sans invention
+
+========================================================================
+R╔SULTAT humanize : 38 PASS / 0 FAIL
+========================================================================
+humanize : pur, dÚterministe, fidÞle (n'invente aucun fait).
+Aucun LLM. Aucun git/apply/authorize. technique conservÚ.

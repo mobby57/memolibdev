@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import threading
+import time
 import urllib.request
 import urllib.error
 import tkinter as tk
@@ -26,6 +27,15 @@ if str(V3_ROOT) not in sys.path:
     sys.path.insert(0, str(V3_ROOT))
 
 import web_research
+from interface.diagnostics import (
+    StepDiagnosticFailure,
+    failed_step,
+    inspection_failure,
+    ollama_failure,
+    successful_step,
+    timing_summary,
+    web_research_diagnostic,
+)
 MEMOLIB_ROOT = Path(r"C:\Users\moros\Desktop\memolib").resolve()
 INSPECTOR = V3_ROOT / "inspector.py"
 REPORTS_DIR = V3_ROOT / "reports"
@@ -1368,12 +1378,49 @@ class MemoLibDevApp(tk.Tk):
     # INSPECTION + OLLAMA
     # ---------------------------------------------------------
 
+    def _show_diagnostic_failure(self, diagnostic, diagnostics):
+        if diagnostic.step_id == "Génération Ollama":
+            self.status_vars["Ollama"].set(
+                "● Ollama ERREUR"
+            )
+            self.ollama_badge.configure(
+                fg="#f87171"
+            )
+
+        self.status_vars["Inspector"].set(
+            f"● {diagnostic.error_code}"
+        )
+        self._append_system(
+            f"{diagnostic.user_message()}\n"
+            f"Chronométrage : {timing_summary(diagnostics)}"
+        )
+
     def _inspect_and_ask(self, request):
+
+        diagnostics = []
+        workflow_started = time.perf_counter()
 
         try:
 
-            paths = self._candidate_files(
-                request
+            started = time.perf_counter()
+            try:
+                paths = self._candidate_files(
+                    request
+                )
+            except Exception as exc:
+                diagnostic = failed_step(
+                    "Sélection",
+                    time.perf_counter() - started,
+                    exc,
+                    error_code="SELECTION_ERROR",
+                )
+                diagnostics.append(diagnostic)
+                raise StepDiagnosticFailure(diagnostic) from exc
+            diagnostics.append(
+                successful_step(
+                    "Sélection",
+                    time.perf_counter() - started,
+                )
             )
 
             self.after(
@@ -1389,8 +1436,24 @@ class MemoLibDevApp(tk.Tk):
             # INSPECTION LOCALE
             # -------------------------------------------------
 
-            inspection = self._run_inspector(
-                paths
+            started = time.perf_counter()
+            try:
+                inspection = self._run_inspector(
+                    paths
+                )
+            except Exception as exc:
+                diagnostic = inspection_failure(
+                    time.perf_counter() - started,
+                    exc,
+                    120,
+                )
+                diagnostics.append(diagnostic)
+                raise StepDiagnosticFailure(diagnostic) from exc
+            diagnostics.append(
+                successful_step(
+                    "Inspection",
+                    time.perf_counter() - started,
+                )
             )
 
             context = self._build_context(
@@ -1418,9 +1481,25 @@ class MemoLibDevApp(tk.Tk):
             # jamais.
             #
 
-            web_report = self._run_web_research(
-                request
+            started = time.perf_counter()
+            try:
+                web_report = self._run_web_research(
+                    request
+                )
+            except Exception as exc:
+                diagnostic = failed_step(
+                    "Recherche Web",
+                    time.perf_counter() - started,
+                    exc,
+                    error_code="WEB_RESEARCH_FAILED",
+                )
+                diagnostics.append(diagnostic)
+                raise StepDiagnosticFailure(diagnostic) from exc
+            web_diagnostic = web_research_diagnostic(
+                time.perf_counter() - started,
+                web_report,
             )
+            diagnostics.append(web_diagnostic)
 
             web_context = self._build_web_context(
                 web_report
@@ -1442,7 +1521,7 @@ class MemoLibDevApp(tk.Tk):
             # OLLAMA
             # -------------------------------------------------
 
-            self._ask_ollama(
+            ollama_diagnostic = self._ask_ollama(
                 request,
                 context,
                 inspection.get(
@@ -1450,17 +1529,60 @@ class MemoLibDevApp(tk.Tk):
                     []
                 ),
                 web_context,
-                web_report
+                web_report,
             )
-
-        except Exception as exc:
+            diagnostics.append(ollama_diagnostic)
+            if ollama_diagnostic.failed:
+                self.after(
+                    0,
+                    lambda diagnostic=ollama_diagnostic,
+                    events=tuple(diagnostics): self._show_diagnostic_failure(
+                        diagnostic,
+                        list(events),
+                    ),
+                )
+                return
 
             self.after(
                 0,
-                lambda error=str(exc):
-                    self._ollama_error(
-                        f"Erreur inspection : {error}"
-                    )
+                lambda summary=timing_summary(diagnostics): self.status_vars[
+                    "Inspector"
+                ].set(f"● {summary}")
+            )
+
+            if web_diagnostic.degraded:
+                self.after(
+                    0,
+                    lambda diagnostic=web_diagnostic: self._append_system(
+                        diagnostic.user_message()
+                    ),
+                )
+
+        except StepDiagnosticFailure as failure:
+            self.after(
+                0,
+                lambda diagnostic=failure.diagnostic,
+                events=tuple(diagnostics): self._show_diagnostic_failure(
+                    diagnostic,
+                    list(events),
+                ),
+            )
+
+        except Exception as exc:
+            diagnostic = failed_step(
+                "Orchestration",
+                time.perf_counter() - workflow_started,
+                exc,
+                error_code="WORKFLOW_ERROR",
+            )
+            diagnostics.append(diagnostic)
+            self.after(
+                0,
+                lambda event=diagnostic,
+                events=tuple(diagnostics): self._show_diagnostic_failure(
+                    event,
+                    list(events),
+                ),
             )
 
 
@@ -1472,6 +1594,7 @@ class MemoLibDevApp(tk.Tk):
         web_context="",
         web_report=None
     ):
+        started = time.perf_counter()
 
         file_list = "\n".join(
             f"- {item.get('requested_path', 'inconnu')}"
@@ -1599,12 +1722,16 @@ Ne fabrique aucun fichier, chemin ou configuration.
                     answer
                 )
             )
+            return successful_step(
+                "Génération Ollama",
+                time.perf_counter() - started,
+            )
 
         except Exception as exc:
-
-            self.after(
-                0,
-                lambda error=str(exc): self._ollama_error(error)
+            return ollama_failure(
+                time.perf_counter() - started,
+                exc,
+                180,
             )
 
     def _agent_response(self, answer):
@@ -1618,21 +1745,6 @@ Ne fabrique aucun fichier, chemin ou configuration.
         )
 
         self._append_agent(answer)
-
-    def _ollama_error(self, error):
-
-        self.status_vars["Ollama"].set(
-            "● Ollama ERREUR"
-        )
-
-        self.ollama_badge.configure(
-            fg="#f87171"
-        )
-
-        self._append_system(
-            "Erreur MemoLibDev.\n"
-            f"Détail : {error}"
-        )
 
     # ---------------------------------------------------------
     # OLLAMA HEALTH
@@ -1702,8 +1814,3 @@ Ne fabrique aucun fichier, chemin ou configuration.
 if __name__ == "__main__":
     app = MemoLibDevApp()
     app.mainloop()
-
-
-
-
-

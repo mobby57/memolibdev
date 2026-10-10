@@ -1,0 +1,43 @@
+{
+  "mission": "analyse la page de connexion /fr/auth/login et le flux d'authentification, identifie le fichier principal concerné et propose une amélioration mineure et réversible",
+  "head": "fad3b20eb7ba8090a9d41f15107999739ccd9d65",
+  "tree_before": "d201a013851a45ea78e04bb9a025b0fa94519bb5",
+  "inspected": 800,
+  "retained": [
+    "src/app/[locale]/auth/login/page.tsx",
+    "src/app/[locale]/auth/error/page.tsx",
+    "src/app/[locale]/auth/forgot-password/page.tsx",
+    "src/app/[locale]/login/page.tsx",
+    "src/app/[locale]/auth/login/layout.tsx",
+    "src/app/[locale]/settings/webhooks/page.tsx"
+  ],
+  "budget_metrics": {
+    "candidats_total": 605,
+    "candidats_classes": 605,
+    "fichiers_selectionnes": 6,
+    "fichiers_exclus_budget": 599,
+    "fichiers_exclus_trop_grands": 0,
+    "chars_selectionnes": 23994,
+    "budget_files": 8,
+    "budget_chars": 24000
+  },
+  "context_status": "CONTEXT_FRESH",
+  "secret_status": "SAFE",
+  "secret_hits": 0,
+  "intent_52": {
+    "objectif": "ANALYSER",
+    "domaine": "AUTH",
+    "type": "ANALYSE",
+    "risque": "HIGH",
+    "confiance": "HIGH"
+  },
+  "plan_status": "ANALYZED",
+  "plan_target": null,
+  "plan_intent": null,
+  "plan_reason": "ANALYSE (lecture seule — aucune modification)\n- Objectif compris : ANALYSER | domaine : AUTH | risque : HIGH | confiance : HIGH\n- Fichiers pertinents identifiés (6) :\n    • src/app/[locale]/auth/login/page.tsx (rôle=CODE, score=124, sha=36a7dd5c3afa)\n    • src/app/[locale]/auth/error/page.tsx (rôle=CODE, score=104, sha=bb088efb5a62)\n    • src/app/[locale]/auth/forgot-password/page.tsx (rôle=CODE, score=94, sha=ed3a0ee6208d)\n    • src/app/[locale]/login/page.tsx (rôle=CODE, score=64, sha=d89e43aad538)\n    • src/app/[locale]/auth/login/layout.tsx (rôle=CODE, score=60, sha=aa204923582d)\n    • src/app/[locale]/settings/webhooks/page.tsx (rôle=CODE, score=30, sha=c84a7f14ec97)\n- Indices de la mission : login, auth, page\n- Risque ÉLEVÉ : domaine sensible (auth/sécurité/données/suppression). Toute correction ultérieure exigera approbation humaine + sandbox + vérification.\n- Recommandation : examiner en priorité 'src/app/[locale]/auth/login/page.tsx'. Pour une correction, relancer en mode CORRIGER (le patch sera alors soumis à R1/D5.8/D5.9 + approbation humaine).\n- Aucune affirmation non étayée par un fichier inspecté. Aucune modification effectuée.",
+  "committed": false,
+  "pushed": false,
+  "has_replace": false,
+  "duration_s": 9.99,
+  "memolib_unchanged": true
+}

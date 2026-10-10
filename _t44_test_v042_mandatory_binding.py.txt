@@ -1,0 +1,56 @@
+========================================================================
+MEMOLIBDEV ÔÇö V0.4.2 BINDING OBLIGATOIRE DU DIFF
+========================================================================
+[PASS] P0 proposition README (proposal_id + diff_sha256)
+
+[M1] approbation BOUND valide -> appliqu├®e
+[FAIL] M1 appliqu├®e (espion atteint) :: BLOCKED
+[PASS] M1 DIFF_BINDING CONTINUE
+
+[M2] approbation legacy sans hash -> refus avant application
+[PASS] M2 BLOCKED :: V0.4.2 binding obligatoire: approbation non li├®e au diff (ex
+[PASS] M2 application JAMAIS atteinte
+[PASS] M2 raison = binding obligatoire
+
+[M3] hash vide / mal form├® / incoh├®rent -> refus
+[PASS] M3 hash='' -> BLOCKED
+[PASS] M3 hash='   ' -> BLOCKED
+[PASS] M3 hash='xyz' -> BLOCKED
+[PASS] M3 hash='000000' -> BLOCKED
+
+[M4] proposal_id absent / modifi├® -> refus
+[PASS] M4 proposal_id None -> BLOCKED
+[PASS] M4 proposal_id modifi├® -> BLOCKED
+
+[M5] diff modifi├® apr├¿s approbation -> refus
+[PASS] M5 BLOCKED (diff != approuv├®) :: V0.4.2 binding: binding: diff_sha256 mismatch ÔÇö le
+
+[M6] SHA source p├®rim├® -> refus (D5.8 integrity, inchang├®)
+[PASS] M6 evidence integrity BLOCK (SHA p├®rim├®) :: Evidence SHA-256 mismatch: authorized=000000000000
+
+[M7] scope ├®largi -> refus (enforce_write_guardrail)
+[PASS] M7 hors scope REJECT
+
+[M8] approbation d'une autre mission -> refus
+[PASS] M8 BLOCKED
+
+[M9] REQUIRE_DIFF_BINDING d├®sactiv├® -> application BLOQU├ëE
+[PASS] M9 BLOCKED quand flag d├®sactiv├® :: V0.4.2 binding: REQUIRE_DIFF_BINDING d├®sactiv├® ÔÇö application
+[PASS] M9 raison = flag d├®sactiv├® -> bloqu├®
+[PASS] M9 flag restaur├® ├á True
+
+[M11] octets exacts transmis ├á D5.9 == hash approuv├®
+[FAIL] M11 D5.9 atteint
+[FAIL] M11 patch_sha == expected_diff_sha256 ::  == b67320d289fb28ed
+
+[M12] rollback conserv├® sous binding (verify FAIL -> ROLLED_BACK)
+[FAIL] M12 binding franchi puis apply atteint
+[FAIL] M12 ROLLED_BACK (rollback intact) :: BLOCKED
+
+[MEMOLIB] inchang├®
+[PASS] MEMOLIB working tree propre :: ''
+
+========================================================================
+R├ëSULTAT V0.4.2 : 19 PASS / 5 FAIL
+├ëCHECS : M1 appliqu├®e (espion atteint), M11 D5.9 atteint, M11 patch_sha == expected_diff_sha256, M12 binding franchi puis apply atteint, M12 ROLLED_BACK (rollback intact)
+========================================================================

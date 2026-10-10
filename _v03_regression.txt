@@ -1,0 +1,13 @@
+test_analysis_builder.py | exit=0 | 
+test_analysis_adversarial.py | exit=0 | 
+test_analyze_vs_correct.py | exit=0 | 
+test_v02_human_states.py | exit=0 | [PASS] H2 VERIFYING -> VERIFYING_RESULT :: VERIFYING_RESULT
+test_humanize.py | exit=0 | [PASS] H5_error_resultat :: Une erreur est survenue. Aucune modification n'a ├®t├® effectu├®e.
+test_api_facade.py | exit=0 | [PASS] A13 'technique' absent de la vue publique :: ['etat', 'niveau_de_controle', 'ce_que_j_ai_compris', 'ce_que_je_vais_faire', 'ce_que_je_ne_vais_pas_faire', 'pourquoi', 'ce_qui_a_ete_verifie', 'action_requise', 'resultat', 'intention_ui', 'proposal']
+test_api_state_machine.py | exit=1 | 
+test_d58_e2e_authorization.py | exit=0 | 
+test_d59_controlled_apply.py | exit=0 | 
+test_d60_agent_loop.py | exit=0 | 
+test_d61_file_target.py | exit=0 | 
+test_d62_code_adapter.py | exit=0 | 
+test_v03_proposer.py | exit=0 | [PASS] 5 technique JAMAIS expos├® au navigateur :: ['etat', 'niveau_de_controle', 'ce_que_j_ai_compris', 'ce_que_je_vais_faire', 'ce_que_je_ne_vais_pas_faire', 'pourquoi', 'ce_qui_a_ete_verifie', 'action_requise', 'resultat', 'intention_ui', 'proposal']

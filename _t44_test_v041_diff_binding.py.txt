@@ -1,0 +1,62 @@
+========================================================================
+MEMOLIBDEV ÔÇö V0.4.1 BINDING CRYPTOGRAPHIQUE DU DIFF
+========================================================================
+[PASS] P0 proposition r├®elle AWAIT_HUMAN :: AWAIT_HUMAN
+[PASS] P0 proposal_id pr├®sent :: P-1b0b75742e7b9a3f4f065a68
+[PASS] P0 diff_sha256 pr├®sent :: 1a16cff6caf912b2
+[PASS] P0 diff_sha256 == sha(octets exacts du diff)
+
+[1] proposition inchang├®e -> accept├®
+[PASS] 1 binding accept├® :: binding: diff conforme ├á la d├®cision humaine
+
+[2] un octet modifi├® -> refus
+[PASS] 2 refus (1 octet) :: binding: diff_sha256 mismatch ÔÇö le patch diff├¿re du diff approuv├® (approuv├®=1a16cff6caf912b2 actuel=058b8f1abce3399b)
+[PASS] 2 refus (octet interne)
+
+[3] diff alt├®r├® mais SHA source identique -> refus
+[PASS] 3 sha_before inchang├® dans la proposition
+[PASS] 3 refus malgr├® SHA source identique :: binding: diff_sha256 mismatch ÔÇö le patch diff├¿re du diff approuv├® (approuv├®=1a16cff6caf912b2 actuel=269b8faba19d5563)
+
+[4] proposal_id modifi├® -> refus
+[PASS] 4 refus proposal_id :: binding: proposal_id mismatch ÔÇö la proposition approuv├®e n'est pas celle pr├®sent├®e (nouvelle d├®cision humaine requise)
+
+[5] mission diff├®rente -> proposal_id diff├®rent
+[PASS] 5 proposal_id diff├®rent pour mission diff├®rente :: P-1b0b75742e7b9a3f4f065a68 vs P-7fc0ac4baf78892c9317f186
+
+[6] scope ├®largi -> refus (enforce_write_guardrail)
+[PASS] 6 diff hors scope REJECT :: ['src/other/x.ts']
+
+[7] SHA source p├®rim├® -> refus (pre_apply G4 / evidence integrity)
+[PASS] 7 evidence integrity BLOCK sur SHA p├®rim├® :: Evidence SHA-256 mismatch: authorized=0000000000000000000000000000000000000000000000000000000000000000 current=25ea34448927f33f5e75f11f5061a81ebfe3f7e1f144422e9fb65fe7849d18b0
+
+[8] approbation absente / mal form├®e -> refus
+[PASS] 8 approbation None -> refus
+[PASS] 8 approved=False -> refus
+[PASS] 8 expected_diff_sha256 absent -> refus (fail-closed)
+[PASS] 8 diff vide -> refus
+
+[10] CRLF/LF/BOM/encodage -> aucune normalisation silencieuse
+[PASS] 10 LF != CRLF (hash distinct)
+[PASS] 10 BOM != sans BOM (hash distinct)
+[PASS] 10 octets canoniques = encode utf-8 sans transformation
+[PASS] 10 un diff CRLF approuv├® n'est pas accept├® comme LF
+
+[11] PREUVE : hash valid├® == octets exacts transmis ├á D5.9
+[PASS] 11 probe AWAIT_HUMAN + proposal README :: AWAIT_HUMAN
+[PASS] 11 binding gate franchi (DIFF_BINDING CONTINUE) :: ['REQUEST', 'DECISION', 'PLAN', 'EVIDENCE', 'PROVENANCE', 'CODER', 'APPROVAL', 'D5.8_GATES', 'DIFF_BINDING', 'APPROVAL_TTL']
+[FAIL] 11 apply atteint (D5.9 appel├® via espion) :: []
+[FAIL] 11 hash valid├® == sha des octets EXACTS pass├®s ├á l'application :: patch= approuv├®=854d62711462007e
+[FAIL] 11 octets appliqu├®s == octets de la proposition pr├®sent├®e
+
+[11b] diff alt├®r├® avec la m├¬me approbation -> BLOCK avant apply
+[PASS] 11b BLOCKED par le binding :: BLOCKED
+[PASS] 11b apply JAMAIS atteint (aucun patch transmis) :: []
+[PASS] 11b raison = binding mismatch :: V0.4.2 binding: binding: diff_sha256 mismatch ÔÇö le patch diff├¿re du diff approuv
+
+[MEMOLIB] inchang├®
+[PASS] MEMOLIB working tree propre (aucun apply r├®el) :: ''
+
+========================================================================
+R├ëSULTAT V0.4.1 : 27 PASS / 3 FAIL
+├ëCHECS : 11 apply atteint (D5.9 appel├® via espion), 11 hash valid├® == sha des octets EXACTS pass├®s ├á l'application, 11 octets appliqu├®s == octets de la proposition pr├®sent├®e
+========================================================================

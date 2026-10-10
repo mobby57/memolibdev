@@ -1,0 +1,62 @@
+========================================================================
+MEMOLIBDEV ù TEST machine d'Útat serveur
+========================================================================
+
+[S1] READ_ONLY -> PROPOSAL_READY
+[PASS] S1 state=PROPOSAL_READY :: PROPOSAL_READY
+[PASS] S1 can_approve=False
+[PASS] S1 can_reject=False
+
+[S2] /approve direct sans aperþu d'action -> 409
+[PASS] S2 http 409 :: 409
+[PASS] S2 INVALID_STATE :: {'error': 'INVALID_STATE', 'reason': 'approbation impossible depuis PROPOSAL_READY'}
+[PASS] S2 moteur NON rappelÚ par /approve :: calls=1
+
+[S3] SUPERVISED_APPLY -> AWAITING_AUTHORIZATION
+[PASS] S3 state=AWAITING_AUTHORIZATION :: AWAITING_AUTHORIZATION
+[PASS] S3 can_approve=True
+[PASS] S3 can_reject=True
+
+[S4] /approve valide depuis AWAITING_AUTHORIZATION
+[PASS] S4 http 200 :: 200
+[PASS] S4 moteur appelÚ (run_cli)
+[PASS] S4 state progressÚ hors AWAITING_AUTHORIZATION :: FAILED
+[PASS] S4 can_approve=False aprÞs exÚcution
+
+[S5] double /approve -> 2e refusÚ
+[PASS] S5 1er /approve 200 :: 200
+[PASS] S5 2e /approve 409 :: 409
+[PASS] S5 2e INVALID_STATE :: {'error': 'INVALID_STATE', 'reason': 'approbation impossible depuis FAILED'}
+[PASS] S5 moteur NON rappelÚ au 2e /approve :: calls=2
+
+[S6] /reject puis /approve -> 409
+[PASS] S6 /reject 200 :: 200
+[PASS] S6 state=REFUSED :: REFUSED
+[PASS] S6 /approve aprÞs refus 409 :: 409
+[PASS] S6 moteur NON appelÚ aprÞs refus
+
+[S7] /reject sur PROPOSAL_READY -> 409
+[PASS] S7 http 409 :: 409
+[PASS] S7 INVALID_STATE :: {'error': 'INVALID_STATE', 'reason': 'refus impossible depuis PROPOSAL_READY'}
+
+[S8] run inconnu -> 404
+[PASS] S8 /approve inconnu 404 :: 404
+[PASS] S8 /approve UNKNOWN_RUN
+[PASS] S8 /reject inconnu 404 :: 404
+[PASS] S8 /reject UNKNOWN_RUN
+
+[S9] historique d'Útat cohÚrent
+[PASS] S9 commence par ANALYZING :: ['ANALYZING', 'AWAITING_AUTHORIZATION', 'AUTHORIZED', 'EXECUTING', 'VERIFYING', 'FAILED']
+[PASS] S9 passe par AWAITING_AUTHORIZATION :: ['ANALYZING', 'AWAITING_AUTHORIZATION', 'AUTHORIZED', 'EXECUTING', 'VERIFYING', 'FAILED']
+[PASS] S9 passe par EXECUTING :: ['ANALYZING', 'AWAITING_AUTHORIZATION', 'AUTHORIZED', 'EXECUTING', 'VERIFYING', 'FAILED']
+[PASS] S9 se termine en Útat terminal :: ['ANALYZING', 'AWAITING_AUTHORIZATION', 'AUTHORIZED', 'EXECUTING', 'VERIFYING', 'FAILED']
+
+[S10] garde sÚquentiel non-autoritaire (le moteur dÚcide)
+[FAIL] S10 moteur appelÚ mÛme en Útat autorisÚ
+[FAIL] S10 verdict suit le MOTEUR (BLOCKED -> state BLOCKED) :: None
+[FAIL] S10 can_approve=False (moteur a tranchÚ)
+
+========================================================================
+R╔SULTAT MACHINE D'╔TAT : 31 PASS / 3 FAIL
+╔CHECS : S10 moteur appelÚ mÛme en Útat autorisÚ, S10 verdict suit le MOTEUR (BLOCKED -> state BLOCKED), S10 can_approve=False (moteur a tranchÚ)
+========================================================================

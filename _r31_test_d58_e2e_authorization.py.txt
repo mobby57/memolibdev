@@ -1,0 +1,28 @@
+========================================================================
+MEMOLIBDEV ÔÇö D5.8 END-TO-END AUTHORIZATION INTEGRATION
+========================================================================
+
+[H] HAPPY PATH ÔÇö cha├«ne compl├¿te
+[PASS] H1_authorization_AUTHORIZED :: AUTHORIZED
+[PASS] H2_write_guardrail_ACCEPTABLE :: ['src/lib/auth/nextauth-token.ts']
+[PASS] H3_sandbox_applicable :: rc=0
+[PASS] H4_sandbox_cleaned
+[PASS] H5_PATCH_PROPOSE :: cha├«ne coh├®rente -> PATCH
+
+[J] JOINTURES ÔÇö attaques inter-composants
+[PASS] J1_diff_hors_certificat_BLOCK :: out_of_scope=['src/other/elsewhere.ts']
+[PASS] J2_diff_mixte_second_fichier_BLOCK :: out_of_scope=['src/other/elsewhere.ts']
+[PASS] J3_diff_corrompu_sandbox_BLOCK :: rc=128
+[PASS] J4_certificat_REJECTED_BLOCK :: CoderAuthorization non AUTHORIZED.
+[PASS] J5_reuse_sur_autre_path_BLOCK :: Fichier evidence introuvable
+[PASS] J6_cible_forgee_BLOCK :: authorization target identity mismatch
+[PASS] MEMOLIB_inchange :: 9ede1ffc3d1e == 9ede1ffc3d1e
+[PASS] MEMOLIB_git_clean_ou_prealable :: git status lisible
+
+========================================================================
+R├ëSULTAT D5.8 : 13 PASS / 0 FAIL
+========================================================================
+Invariant inter-composants :
+  Jointure attaqu├®e -> BLOCK : PROUV├ë
+  Cha├«ne coh├®rente -> PATCH PROPOS├ë : H5
+Aucun Ollama. MemoLib non modifi├®.

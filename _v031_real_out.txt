@@ -1,0 +1,20 @@
+[PRE] HEAD=fad3b20e status=''
+[STATE] final=AWAIT_HUMAN
+[PROPOSAL] scope=src/app/[locale]/comptable/page.tsx
+[PROPOSAL] diff_len=374 starts_diff=True
+[CONFIDENCE] level=MEDIUM
+[CONFIDENCE] reasons(5):
+   - Un diff concret est pr├®sent.
+   - Le diff passe la validation structurelle (non vide, modification r├®elle, pas de perte massive).
+   - Le diff est produit de fa├ºon d├®terministe (git).
+   - La cible est ancr├®e sur un SHA frais (contexte ├á jour).
+   - Le p├®rim├¿tre (scope) est coh├®rent et v├®rifiable.
+[CONFIDENCE] gates: ['G2 aucune preuve causale -> jamais HIGH']
+[CONFIDENCE] evidence: ['diff=present', 'diff_valid=true', 'diff_deterministic=true', 'fresh_sha=true', 'scope_verifiable=true']
+[EVIDENCE] file0 path=src/app/[locale]/comptable/page.tsx sha_before=19359d80b1ba
+[UI] technique absent de vue = True
+[POST] HEAD=fad3b20e status=''
+
+==== VERDICT ====
+AWAIT_HUMAN + proposal + confidence + reasons + diff : True
+MemoLib inchang├® (HEAD + status)                     : True
