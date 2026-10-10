@@ -127,6 +127,12 @@ _DETECTORS: tuple[tuple[str, "re.Pattern[str]"], ...] = (
         r"\b(try|catch|throw|error|Error|reject|fail)\b")),
     ("CONFIG_KEY", re.compile(
         r"^\s*[\"']?[A-Za-z0-9_.-]+[\"']?\s*[:=]\s*", )),
+    ("DEFINITION", re.compile(
+        r"^\s*(async\s+)?def\s+\w+\s*\(|^\s*class\s+\w+"
+        r"|^\s*(export\s+)?(async\s+)?function\s+\w+\s*\(")),
+    ("DOC_HEADING", re.compile(r"^\s*#{1,6}\s+\S")),
+    ("DOC_LIST", re.compile(r"^\s*[-*+]\s+\S")),
+    ("DOC_TABLE", re.compile(r"^\s*\|.+\|")),
 )
 
 # Catégories jugées "porteuses de cause" pour un domaine donné : ce sont
@@ -139,7 +145,7 @@ _DOMAIN_RELEVANT_CATEGORIES = {
     "DATA": ("IMPORT", "CONFIG_KEY", "ERROR_HANDLING"),
     "CONFIG": ("CONFIG_KEY", "IMPORT"),
     "TESTS": ("IMPORT", "EXPORT", "ERROR_HANDLING"),
-    "DOC": ("CONFIG_KEY",),
+    "DOC": ("CONFIG_KEY", "DOC_HEADING", "DOC_LIST", "DOC_TABLE", "DEFINITION"),
     "SECURITE": ("AUTH", "ERROR_HANDLING", "CONFIG_KEY", "CONDITION"),
 }
 
@@ -207,7 +213,7 @@ def _extract_facts_from_file(path: str, preview: str, sha: str) -> list[Verified
 # CONFIG_KEY) ne sont QUE des présences lexicales : elles restent des FAITS
 # mais ne constituent JAMAIS une cause à elles seules.
 _BEHAVIORAL_CATEGORIES = ("REDIRECT", "ROUTE", "CONDITION", "ERROR_HANDLING",
-                          "LOCALE")
+                          "LOCALE", "DEFINITION", "DOC_HEADING")
 
 
 def _behavioral_relevant(facts: list, relevant_cats: tuple) -> list:
