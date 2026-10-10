@@ -124,6 +124,8 @@ def main() -> int:
     ok("T1 sérialisation identique", r1.to_dict() == r2.to_dict())
     ok("T1 rendu texte identique",
        render_analysis_text(r1, FakeIntent()) == render_analysis_text(r2, FakeIntent()))
+    ok("T1 synthèse déterministe et non vide",
+       bool(r1.synthese) and r1.synthese == r2.synthese, r1.synthese)
 
     # ---------------- T2 — chaque fait a une source existante ----------------
     print("\n[T2] chaque fait provient d'un fichier du contexte")
@@ -312,7 +314,7 @@ def main() -> int:
     print("\n[T12] invariant aucune_modification + contrat sérialisable complet")
     d = res.to_dict()
     for key in ("demande_comprise", "faits_verifies", "elements_examines",
-                "analyse", "cause_probable", "correction_minimale",
+                "analyse", "synthese", "cause_probable", "correction_minimale",
                 "confiance", "incertitudes", "aucune_modification"):
         ok(f"T12 clé contrat '{key}' présente", key in d)
     ok("T12 aucune_modification == True", d["aucune_modification"] is True)

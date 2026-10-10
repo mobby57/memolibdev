@@ -11,6 +11,7 @@ Contrat (exigé) — AnalysisResult sérialisable :
     faits_verifies        : list[VerifiedFact]
     elements_examines     : list[str]       (chemins réellement inspectés)
     analyse               : str
+    synthese              : str             (dérivée uniquement des faits)
     cause_probable        : str | None      (None si non étayée)
     correction_minimale   : str | None      (DESCRIPTIVE, jamais un diff)
     confiance             : "HIGH"|"MEDIUM"|"LOW"
@@ -77,6 +78,7 @@ class AnalysisResult:
     faits_verifies: tuple[VerifiedFact, ...]
     elements_examines: tuple[str, ...]
     analyse: str
+    synthese: str
     cause_probable: Optional[str]
     correction_minimale: Optional[str]
     confiance: str                      # HIGH | MEDIUM | LOW
@@ -89,6 +91,7 @@ class AnalysisResult:
             "faits_verifies": [f.to_dict() for f in self.faits_verifies],
             "elements_examines": list(self.elements_examines),
             "analyse": self.analyse,
+            "synthese": self.synthese,
             "cause_probable": self.cause_probable,
             "correction_minimale": self.correction_minimale,
             "confiance": self.confiance,
@@ -236,6 +239,43 @@ def _strong_candidate_files(relevant_facts: list, relevant_cats: tuple) -> dict:
     return {path: cats for path, cats in by_file.items() if len(cats) >= 2}
 
 
+def _descriptive_synthesis(facts: list[VerifiedFact]) -> str:
+    """Résume uniquement les catégories et extraits réellement observés."""
+    if not facts:
+        return ("Synthèse factuelle indisponible : aucun fait n'a été extrait "
+                "du contenu inspecté.")
+
+    by_category: dict[str, list[VerifiedFact]] = {}
+    for fact in facts:
+        by_category.setdefault(fact.categorie, []).append(fact)
+
+    parts: list[str] = []
+    for category, label in (
+        ("DOC_HEADING", "section(s) documentaire(s)"),
+        ("DOC_LIST", "entrée(s) de liste"),
+        ("CONDITION", "condition(s)"),
+    ):
+        count = len(by_category.get(category, ()))
+        if count:
+            parts.append(f"{count} {label} observée(s)")
+
+    names: list[str] = []
+    for fact in by_category.get("DEFINITION", ()):
+        match = re.search(
+            r"\b(?:def|class|function)\s+([A-Za-z_][A-Za-z0-9_]*)",
+            fact.extrait,
+        )
+        if match and match.group(1) not in names:
+            names.append(match.group(1))
+    if names:
+        parts.append("définition(s) observée(s) : " + ", ".join(
+            f"`{name}`" for name in names))
+
+    if not parts:
+        parts.append("catégories observées : " + ", ".join(sorted(by_category)))
+    return "Synthèse factuelle : " + "; ".join(parts) + "."
+
+
 def _confidence(relevant_facts: list, relevant_cats: tuple,
                 files_count: int, any_preview: bool) -> tuple[str, dict]:
     """
@@ -381,6 +421,7 @@ def build_analysis(ctx, structured_intent) -> AnalysisResult:
         analyse = (
             f"J'ai examiné {len(relevant_files)} fichier(s), mais le contenu "
             f"disponible ne contient aucun élément exploitable pour conclure.")
+    synthese = _descriptive_synthesis(all_facts)
 
     # 6. Cause probable — UNIQUEMENT si des faits pertinents l'étayent.
     #    Fail-closed : jamais une cause inventée. On NOMME les éléments
@@ -426,6 +467,7 @@ def build_analysis(ctx, structured_intent) -> AnalysisResult:
         faits_verifies=tuple(all_facts),
         elements_examines=tuple(elements),
         analyse=analyse,
+        synthese=synthese,
         cause_probable=cause_probable,
         correction_minimale=correction_minimale,
         confiance=confiance,
@@ -467,6 +509,7 @@ def render_analysis_text(result: AnalysisResult, structured_intent) -> str:
             f"(sha {f.sha[:12]}) :: {f.extrait}")
 
     lines.append(f"- Analyse : {result.analyse}")
+    lines.append(f"- {result.synthese}")
 
     if result.cause_probable is not None:
         lines.append(f"- Cause probable : {result.cause_probable}")
