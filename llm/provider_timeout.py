@@ -74,6 +74,24 @@ def call_provider_with_timeout(
     Appelle `provider.analyze_plan(context)` dans un process isolé, borné
     par `timeout_s`. Fail-closed : tout problème -> plan=None.
     """
+    # --- Guard PyInstaller : multiprocessing spawn est incompatible avec
+    # un .exe (relance le binaire sans arguments). On appelle le provider
+    # directement dans le processus courant. Le timeout R4 est desactive
+    # en mode .exe, mais le comportement reste fail-closed.
+    import sys as _sys
+    if getattr(_sys, "frozen", False):
+        try:
+            plan = provider.analyze_plan(context)
+            if plan is None:
+                return TimeoutOutcome(
+                    status="ERROR", plan=None,
+                    reason="provider indisponible en mode .exe (frozen)")
+            return TimeoutOutcome(status="OK", plan=plan, reason="")
+        except Exception as e:
+            return TimeoutOutcome(
+                status="ERROR", plan=None,
+                reason=f"appel provider echoue : {type(e).__name__}: {e}")
+
     if timeout_s is None or timeout_s <= 0:
         return TimeoutOutcome("ERROR", None, "timeout invalide (<=0)")
 

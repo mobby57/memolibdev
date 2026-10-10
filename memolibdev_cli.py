@@ -436,21 +436,27 @@ def main(argv=None) -> int:
         return 3
 
     def verify(repo: Path) -> tuple[bool, str]:
-        # VERIFY reel : analyse les fichiers modifies par git status.
+        # VERIFY reel : analyse tous les fichiers modifies ou nouveaux.
         import subprocess as _sp
         from verify_project import verify_project
         try:
             r = _sp.run(
-                ["git", "diff", "--name-only", "HEAD"],
+                ["git", "status", "--porcelain", "-z"],
                 cwd=str(repo), capture_output=True, text=True,
                 encoding="utf-8", errors="replace", timeout=10,
             )
-            changed = [f.strip() for f in r.stdout.splitlines() if f.strip()]
-        except Exception:
-            changed = []
+            if r.returncode != 0:
+                return (False, f"verify: git status a echoue: {r.stderr.strip()}")
+            changed = [
+                record[3:]
+                for record in r.stdout.split("\0")
+                if len(record) >= 4 and record[3:]
+            ]
+        except (OSError, _sp.SubprocessError) as exc:
+            return (False, f"verify: git status impossible: {exc}")
         if not changed:
-            return (True, "verify: aucun fichier modifie")
-        return verify_project(repo, changed, run_tests=False)
+            return (False, "verify: aucun fichier modifie")
+        return verify_project(repo, changed, run_tests=True)
 
     result = run_cli(
         mission=args.mission, target=target, mode=args.mode, model=args.model,

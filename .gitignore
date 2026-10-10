@@ -67,3 +67,8 @@ v354_g_campaign/
 
 # pytest
 .pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.spec

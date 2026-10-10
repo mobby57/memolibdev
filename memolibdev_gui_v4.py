@@ -28,6 +28,42 @@ def _base_dir() -> Path:
 
 BASE_DIR = _base_dir()
 CLI_PATH = BASE_DIR / "memolibdev_cli.py"
+
+
+def find_cli_executable():
+    """Trouve MemoLibDev-cli.exe.
+    Cherche a cote de l'exe (sys.executable), puis dans _MEIPASS, puis a cote du script."""
+    candidates = []
+    if getattr(sys, "frozen", False):
+        # A cote du .exe (cas normal : les deux .exe dans le meme dossier)
+        candidates.append(Path(sys.executable).parent / "MemoLibDev-cli.exe")
+    if hasattr(sys, "_MEIPASS"):
+        candidates.append(Path(sys._MEIPASS) / "MemoLibDev-cli.exe")
+    candidates.append(Path(__file__).parent / "MemoLibDev-cli.exe")
+    candidates.append(BASE_DIR / "MemoLibDev-cli.exe")
+
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
+def find_cli_executable():
+    """Trouve MemoLibDev-cli.exe.
+    Cherche a cote de l'exe (sys.executable), puis dans _MEIPASS, puis a cote du script."""
+    candidates = []
+    if getattr(sys, "frozen", False):
+        # A cote du .exe (cas normal : les deux .exe dans le meme dossier)
+        candidates.append(Path(sys.executable).parent / "MemoLibDev-cli.exe")
+    if hasattr(sys, "_MEIPASS"):
+        candidates.append(Path(sys._MEIPASS) / "MemoLibDev-cli.exe")
+    candidates.append(Path(__file__).parent / "MemoLibDev-cli.exe")
+    candidates.append(BASE_DIR / "MemoLibDev-cli.exe")
+
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
 DEFAULT_MODEL = "memolibdev-qwen7b-16k:latest"
 OLLAMA_URL = "http://localhost:11434"
 
@@ -81,6 +117,7 @@ class MemoLibDevApp(ctk.CTk):
         self.project_path = ctk.StringVar(value="(aucun projet)")
         self.model_var = ctk.StringVar(value=DEFAULT_MODEL)
         self.busy = False
+        self.messages = []  # historique pour export
 
         self._build_ui()
         self.after(100, self._check_env)
@@ -107,7 +144,13 @@ class MemoLibDevApp(ctk.CTk):
                       command=self._choose_project,
                       width=140, height=34,
                       fg_color=CARD, hover_color="#21262d",
-                      border_width=1, border_color=BORDER).grid(row=0, column=2, padx=(0, 16))
+                      border_width=1, border_color=BORDER).grid(row=0, column=2, padx=(0, 8))
+
+        ctk.CTkButton(header, text="Sauver log",
+                      command=self._save_log,
+                      width=100, height=34,
+                      fg_color=CARD, hover_color="#21262d",
+                      border_width=1, border_color=BORDER).grid(row=0, column=3, padx=(0, 16))
 
         self.chat = ctk.CTkScrollableFrame(self, fg_color=BG, corner_radius=0)
         self.chat.grid(row=1, column=0, sticky="nsew")
@@ -237,6 +280,7 @@ class MemoLibDevApp(ctk.CTk):
                      font=ctk.CTkFont(size=12), anchor="w", justify="left",
                      wraplength=520).pack(fill="x", padx=14, pady=(0, 10))
 
+        self.messages.append(f"[{author}] {text}")
         self.after(80, self._scroll)
 
     def _scroll(self):
@@ -245,36 +289,111 @@ class MemoLibDevApp(ctk.CTk):
         except Exception:
             pass
 
+    def _save_log(self):
+        from tkinter import filedialog
+        import datetime
+        p = filedialog.asksaveasfilename(
+            title="Sauver le log",
+            defaultextension=".txt",
+            initialfile=f"memolibdev_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+            filetypes=[("Texte", "*.txt"), ("Tous", "*.*")],
+        )
+        if not p:
+            return
+        try:
+            Path(p).write_text("\n".join(self.messages), encoding="utf-8")
+            self._system(f"Log sauve : {p}")
+        except Exception as e:
+            self._assistant(f"Erreur sauvegarde : {e}")
+
     def _run(self, project, mission):
         self.busy = True
         self.send_btn.configure(state="disabled")
         self.status.configure(text="En cours...")
 
         def worker():
+            # Trouver le CLI : MemoLibDev-cli.exe a cote, sinon memolibdev_cli.py
+            cli_exe = find_cli_executable()
+            cli_py = BASE_DIR / "memolibdev_cli.py"
+
             env = os.environ.copy()
             env["MEMOLIBDEV_TARGET"] = project
             env["PYTHONIOENCODING"] = "utf-8"
 
-            cmd = [sys.executable, str(CLI_PATH),
-                   "--mission", mission,
-                   "--mode", "PROPOSE",
-                   "--model", self.model_var.get().strip(),
-                   "--timeout", "300"]
+            if cli_exe is not None:
+                cmd = [str(cli_exe)]
+                self.after(0, self._system, f"CLI : {cli_exe}")
+            elif cli_py.is_file():
+                cmd = [sys.executable, str(cli_py)]
+                self.after(0, self._system, f"CLI (python) : {cli_py}")
+            else:
+                self.after(0, self._assistant,
+                           f"CLI introuvable. Cherche dans :\n"
+                           f"  {Path(sys.executable).parent}\n"
+                           f"  {BASE_DIR}")
+                self.after(0, self._done)
+                return
 
+            # Detecter automatiquement le mode selon la mission
+            mission_lower = mission.lower()
+            keywords_analyse = (
+                "decris", "décris", "analyse", "explique", "liste",
+                "documente", "cherche", "trouve", "signale", "identifie",
+                "verifie", "vérifie", "resume", "résume", "presente",
+                "présente", "explore", "inspecte", "comprends",
+            )
+            if any(k in mission_lower for k in keywords_analyse):
+                mode = "READ_ONLY"
+            else:
+                mode = "PROPOSE"
+
+            self.after(0, self._system, f"Mode : {mode}")
+
+            cmd += [
+                "--mission", mission,
+                "--mode", mode,
+                "--model", self.model_var.get().strip(),
+                "--timeout", "300",
+            ]
+
+            buf_lines = []
             try:
-                proc = subprocess.run(cmd, cwd=str(BASE_DIR), env=env,
-                                       capture_output=True, text=True, timeout=600,
-                                       encoding="utf-8", errors="replace")
-                out = (proc.stdout or "") + (proc.stderr or "")
-                self.after(0, self._display, out)
+                proc = subprocess.Popen(
+                    cmd,
+                    cwd=str(BASE_DIR),
+                    env=env,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    stdin=subprocess.DEVNULL,
+                    # Pas de text=True : on lit en bytes et decode nous-memes
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
+                )
+                # Lire par bytes bruts (pas de text=True), decoder en UTF-8 avec fallback cp1252
+                buf_lines = []
+                for raw in iter(proc.stdout.readline, b""):
+                    try:
+                        line = raw.decode("utf-8").rstrip("\r\n")
+                    except UnicodeDecodeError:
+                        line = raw.decode("cp1252", errors="replace").rstrip("\r\n")
+                    if line:
+                        buf_lines.append(line)
+                proc.wait(timeout=600)
+
+                # Afficher TOUT en une seule bulle (evite le hachage ligne par ligne)
+                if buf_lines:
+                    full = "\n".join(buf_lines)
+                    self.after(0, self._assistant, full)
             except Exception as e:
-                self.after(0, self._assistant, f"Erreur : {e}")
+                self.after(0, self._assistant, f"Erreur : {type(e).__name__}: {e}")
             finally:
                 self.after(0, self._done)
 
         threading.Thread(target=worker, daemon=True).start()
 
     def _display(self, raw):
+        if not raw.strip():
+            self._assistant("(aucune sortie)")
+            return
         for line in raw.splitlines():
             if line.strip():
                 self._assistant(line)
