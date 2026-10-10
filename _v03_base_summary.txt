@@ -1,4 +1,0 @@
-statemachine exit=1
-facade exit=0
-humanstates exit=0
-humanize exit=0
