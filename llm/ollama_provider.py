@@ -64,8 +64,8 @@ class OllamaProvider:
     """
     model: str = "qwen2.5-coder:1.5b-base"
     base_url: str = DEFAULT_BASE_URL
-    http_timeout: float = 60.0
-    num_predict: int = 64
+    http_timeout: float = 300.0
+    num_predict: int = 256
     temperature: float = 0.0
     locality_value: str = ProviderLocality.LOCAL
 
@@ -98,10 +98,22 @@ class OllamaProvider:
             primary_preview = rf.preview[:800]
         return (
             "Tu es un assistant qui propose UNE seule transformation de code.\n"
-            "Réponds EXCLUSIVEMENT par une seule ligne au format strict :\n"
-            "REPLACE:<texte_existant>:<nouveau_texte>\n"
-            "Le <texte_existant> DOIT exister tel quel dans le fichier.\n"
-            "N'ajoute aucune explication, aucun autre texte.\n\n"
+            "Réponds EXCLUSIVEMENT par une ligne au format STRICT :\n"
+            "REPLACE:<ancien>:<nouveau>\n"
+            "\n"
+            "Règles STRICTES :\n"
+            "- UNE SEULE ligne, rien d'autre (pas d'explication, pas de markdown).\n"
+            "- <ancien> NE DOIT PAS contenir le caractère ':'\n"
+            "- <nouveau> NE DOIT PAS contenir le caractère ':'\n"
+            "- Ne mets PAS de ':' au début ni à la fin de <ancien> ou <nouveau>.\n"
+            "- <ancien> doit exister TEL QUEL dans le fichier.\n"
+            "\n"
+            "EXEMPLE VALIDE (à reproduire exactement, SANS ':' final) :\n"
+            "REPLACE:def hello():def greet()\n"
+            "\n"
+            "EXEMPLE INVALIDE (à NE PAS faire) :\n"
+            "REPLACE:def hello()::def greet():\n"
+            "\n"
             f"Mission: {context.mission_text}\n\n"
             f"Fichiers autorisés (choisis-en un) :\n{files_block}\n\n"
             f"Extrait du fichier principal :\n{primary_preview}\n\n"
@@ -131,12 +143,29 @@ class OllamaProvider:
             line = line.strip()
             if line.startswith("REPLACE:"):
                 parts = line.split(":", 2)
-                if len(parts) == 3 and parts[1]:
-                    return LLMPlan(
-                        target_path=target,
-                        intent=line,
-                        rationale="OllamaProvider (sortie modèle, non-autorité)",
-                    )
+                if len(parts) != 3 or not parts[1]:
+                    continue
+                old_frag = parts[1]
+                new_frag = parts[2]
+                # Validation STRICTE : rejeter les ':' parasites.
+                # Le LLM confond souvent le format et produit
+                # REPLACE:old::new ou REPLACE:old:new: (colon en trop).
+                # Tolere le ':' final parasite (confusion frequente du LLM)
+                # en le retirant, plutot que de rejeter la reponse.
+                new_frag = new_frag.rstrip(":")
+                if not new_frag:
+                    continue
+                if old_frag.startswith(":"):
+                    continue
+                if "::" in (old_frag + ":" + new_frag):
+                    continue
+                # Reconstruire la ligne propre
+                clean_line = f"REPLACE:{old_frag}:{new_frag}"
+                return LLMPlan(
+                    target_path=target,
+                    intent=clean_line,
+                    rationale="OllamaProvider (sortie modèle, non-autorité)",
+                )
         return None
 
     def analyze_plan(self, context) -> Optional[LLMPlan]:

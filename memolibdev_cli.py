@@ -170,6 +170,49 @@ def run_cli(
             provider=provider, provider_timeout_s=provider_timeout_s,
         )
         rep = res.report
+
+        # Affichage enrichi en mode PROPOSE (lecture seule, aucun apply).
+        if mode == "PROPOSE":
+            proposal = getattr(rep, "proposal", None)
+            if proposal is not None:
+                print()
+                print("=" * 60)
+                print(" PROPOSITION")
+                print("=" * 60)
+                if getattr(proposal, "summary", None):
+                    print(f"Resume    : {proposal.summary}")
+                if getattr(proposal, "scope", None):
+                    print(f"Fichier   : {proposal.scope}")
+                if getattr(proposal, "confidence", None):
+                    print(f"Confiance : {proposal.confidence}")
+                if getattr(proposal, "risk", None):
+                    print(f"Risque    : {proposal.risk}")
+                if getattr(proposal, "reason", None):
+                    print(f"Raison    : {proposal.reason}")
+
+                files = getattr(proposal, "files", ()) or ()
+                if files:
+                    print(f"Fichiers  : {len(files)} concerne(s)")
+                    for f in files:
+                        p = getattr(f, "path", None)
+                        sha = getattr(f, "sha_before", None)
+                        if p:
+                            print(f"  - {p}  (sha_before={sha or 'N/A'})")
+
+                diff = getattr(proposal, "diff_preview", None)
+                if diff:
+                    print()
+                    print("--- DIFF PROPOSE ---")
+                    print(diff)
+                    print("--- FIN DIFF ---")
+                else:
+                    print()
+                    print("(aucun diff_preview disponible)")
+
+                print()
+                print("Aucune modification effectuee.")
+                print("=" * 60)
+
         return CliResult(
             status=rep.final_state,                # AWAIT_HUMAN ou BLOCKED
             message=f"[{mode}] {rep.reason}",
