@@ -27,8 +27,8 @@ Les 16 épreuves exigées (§9) :
 
 Cible RÉELLE : MEMOLIBDEV_TARGET (ici le dépôt MemoLib), lecture seule.
 Les épreuves qui exercent le vrai moteur produisent un VRAI diff via
-code_adapter.generate_diff_git (git diff), puis restaurent le fichier.
-Aucune des 11 étapes du moteur n'est modifiée : on l'OBSERVE.
+code_adapter.generate_diff_git (git diff --no-index) sans écrire dans
+le dépôt cible. Aucune des 11 étapes du moteur n'est modifiée : on l'OBSERVE.
 
 Lancement :  (MEMOLIBDEV_TARGET pointant un dépôt git réel)
     python test_v03_proposer.py

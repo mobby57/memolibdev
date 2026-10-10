@@ -176,8 +176,15 @@ def main() -> int:
         # ============================================================
         print("\n[C] Diff déterministe + applicabilité")
 
+        content_before_diff = (root / ft_ts.path).read_bytes()
+        status_before_diff = git(root, "status", "--porcelain").stdout
         diff = generate_diff_git(root, ft_ts.path, new_content)
         ok("C1_diff_generated", len(diff) > 0 and "---" in diff, f"{len(diff)} chars")
+        ok(
+            "C1a_diff_generation_does_not_write_target",
+            (root / ft_ts.path).read_bytes() == content_before_diff
+            and git(root, "status", "--porcelain").stdout == status_before_diff,
+        )
 
         # git apply --check dans le sandbox (via fichier patch, robuste Windows)
         pf = root / "_c2.diff"

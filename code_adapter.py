@@ -33,7 +33,10 @@ from __future__ import annotations
 
 import difflib
 import re
+import subprocess
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 
 from file_target import FileTarget, FileTargetError
 
@@ -323,31 +326,58 @@ def generate_diff_git(
     new_content: str,
 ) -> str:
     """
-    Produit un unified diff via `git diff` réel — garantit la
-    compatibilité byte-exact avec `git apply`. Le fichier est
-    modifié temporairement dans le working tree, le diff est
-    capturé, puis le fichier est restauré.
+    Produit un unified diff via `git diff --no-index` réel — garantit
+    la compatibilité avec `git apply` sans jamais modifier le working
+    tree cible.
 
     Ne fait JAMAIS de commit/push. Méthode éprouvée (D5.8/D5.9).
     """
-    import subprocess
-    from pathlib import Path as P
+    target = (Path(repo_root) / rel_path).resolve()
+    if not target.is_file():
+        raise CodeAdapterError(f"Fichier absent : {rel_path}")
 
-    target = (P(repo_root) / rel_path).resolve()
     original = target.read_bytes()
 
-    try:
-        target.write_text(new_content, encoding="utf-8", newline="\n")
+    with tempfile.TemporaryDirectory(prefix="memolibdev-diff-") as temp_dir:
+        temp_root = Path(temp_dir)
+        before = temp_root / "before"
+        after = temp_root / "after"
+        before.write_bytes(original)
+        after.write_text(new_content, encoding="utf-8", newline="\n")
 
         result = subprocess.run(
-            ["git", "-C", str(repo_root), "diff", "--", rel_path],
+            [
+                "git",
+                "diff",
+                "--no-index",
+                "--no-ext-diff",
+                "--binary",
+                "--src-prefix=a/",
+                "--dst-prefix=b/",
+                "--",
+                str(before),
+                str(after),
+            ],
             text=True, capture_output=True, encoding="utf-8", errors="replace",
         )
 
-        if result.returncode != 0 or not result.stdout.strip():
+        if result.returncode not in (0, 1) or not result.stdout.strip():
             return ""
 
-        return result.stdout
-    finally:
-        # Restaurer byte-exact.
-        target.write_bytes(original)
+        diff = result.stdout
+        for temporary, canonical in (
+            (before, f"a/{rel_path}"),
+            (after, f"b/{rel_path}"),
+        ):
+            windows_escaped = str(temporary).replace("\\", "\\\\")
+            for path_text in {
+                str(temporary),
+                temporary.as_posix(),
+                windows_escaped,
+            }:
+                diff = diff.replace(f'"a/{path_text}"', canonical)
+                diff = diff.replace(f'"b/{path_text}"', canonical)
+                diff = diff.replace(f"a/{path_text}", canonical)
+                diff = diff.replace(f"b/{path_text}", canonical)
+
+        return diff
