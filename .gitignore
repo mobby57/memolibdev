@@ -41,3 +41,29 @@ Thumbs.db
 
 # Logs
 *.log
+
+# ============================================================
+# Artefacts temporaires MemoLibDev (ajouts V3.5.4-I)
+# ============================================================
+
+# Rapports de debug / sorties temporaires
+_*.txt
+_r31_*.txt
+_reg_*.txt
+_t44_*.txt
+_v0*_*.txt
+_v031_*.txt
+o_*.txt
+out_*.txt
+*.py.txt
+
+# Sauvegardes complementaires
+*.backup
+*.py.before-*
+*.py.pre-*
+
+# Artefacts de campagne V3.5.4-G
+v354_g_campaign/
+
+# pytest
+.pytest_cache/
