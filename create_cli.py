@@ -16,6 +16,7 @@ from pathlib import Path
 from create_parser import parse_create_intent, CreateParseError
 from create_target import resolve_create_target, CreateTargetError
 from create_apply import apply_create
+from create_proof import capture_absence_evidence, CreateProofError
 from create_authorization import (
     build_create_approval, verify_create_approval,
     CreateAuthorizationError,
@@ -136,6 +137,12 @@ def main():
         return 5
     print(f"[OK] Cible : {target.abs_path}")
 
+    try:
+        absence_evidence = capture_absence_evidence(target)
+    except CreateProofError as e:
+        print(f"[ERREUR] Evidence d'absence : {e}", file=sys.stderr)
+        return 5
+
     # 5. Preview
     print("\n" + "=" * 60)
     print(" CONTENU PROPOSE")
@@ -162,8 +169,14 @@ def main():
             approver=args.approver,
             target_path=target.rel_path,
             content=intent.content,
+            absence_evidence_sha256=absence_evidence.evidence_sha256,
         )
-        verify_create_approval(approval, target.rel_path, intent.content)
+        verify_create_approval(
+            approval,
+            target.rel_path,
+            intent.content,
+            absence_evidence.evidence_sha256,
+        )
     except CreateAuthorizationError as e:
         print(f"[ERREUR] Autorisation : {e}", file=sys.stderr)
         return 6
@@ -178,13 +191,20 @@ def main():
         return (True, "ok")
 
     print("\n[4] Application...")
-    result = apply_create(target, intent.content, verify_file)
+    result = apply_create(
+        target,
+        intent.content,
+        verify_file,
+        absence_evidence,
+    )
 
     print("\n" + "-" * 60)
     print(f"STATUT : {result.status}")
     print(f"Fichier : {result.path}")
     if result.sha256:
         print(f"SHA256  : {result.sha256[:32]}...")
+    if result.rollback_proof_sha256:
+        print(f"Preuve rollback : {result.rollback_proof_sha256[:32]}...")
     print(f"Rollback: {result.rolled_back}")
     if result.reason:
         print(f"Raison  : {result.reason}")

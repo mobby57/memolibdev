@@ -14,6 +14,7 @@ ALLOWED_EXT = {".md", ".txt", ".json", ".csv", ".html", ".xml", ".yaml",
 
 @dataclass(frozen=True)
 class CreateTarget:
+    git_root: Path
     abs_path: Path
     rel_path: str
     exists_before: bool
@@ -41,4 +42,13 @@ def resolve_create_target(git_root, rel_path):
         raise CreateTargetError(f"extension non autorisee : {ext}")
     if candidate.exists():
         raise CreateTargetError(f"le fichier existe deja : {candidate}")
-    return CreateTarget(abs_path=candidate, rel_path=str(p).replace("\\", "/"), exists_before=False)
+    if not candidate.parent.is_dir():
+        raise CreateTargetError(
+            f"dossier parent absent : {candidate.parent}"
+        )
+    return CreateTarget(
+        git_root=git_root,
+        abs_path=candidate,
+        rel_path=str(p).replace("\\", "/"),
+        exists_before=False,
+    )

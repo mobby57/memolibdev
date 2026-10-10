@@ -436,8 +436,21 @@ def main(argv=None) -> int:
         return 3
 
     def verify(repo: Path) -> tuple[bool, str]:
-        # VERIFY léger par défaut : le fichier reste lisible/non vide.
-        return (True, "verify léger (CLI)")
+        # VERIFY reel : analyse les fichiers modifies par git status.
+        import subprocess as _sp
+        from verify_project import verify_project
+        try:
+            r = _sp.run(
+                ["git", "diff", "--name-only", "HEAD"],
+                cwd=str(repo), capture_output=True, text=True,
+                encoding="utf-8", errors="replace", timeout=10,
+            )
+            changed = [f.strip() for f in r.stdout.splitlines() if f.strip()]
+        except Exception:
+            changed = []
+        if not changed:
+            return (True, "verify: aucun fichier modifie")
+        return verify_project(repo, changed, run_tests=False)
 
     result = run_cli(
         mission=args.mission, target=target, mode=args.mode, model=args.model,
