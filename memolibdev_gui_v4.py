@@ -17,7 +17,12 @@ import customtkinter as ctk
 
 # --- Chemins relatifs (fonctionne dans un .exe PyInstaller) ---
 def _base_dir() -> Path:
+    """Dossier contenant les modules Python.
+    En mode .exe : sys._MEIPASS (PyInstaller extrait les --add-data la).
+    En mode .py : le dossier du script."""
     if getattr(sys, "frozen", False):
+        if hasattr(sys, "_MEIPASS"):
+            return Path(sys._MEIPASS)
         return Path(sys.executable).parent
     return Path(__file__).parent
 
