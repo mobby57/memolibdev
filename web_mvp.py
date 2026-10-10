@@ -93,7 +93,9 @@ _INDEX_HTML = """<!DOCTYPE html>
 <body>
 <div class="wrap">
   <h1>Que voulez-vous que votre agent fasse&nbsp;?</h1>
-  <label for="mission">Décrivez votre demande en langage courant</label>
+  <label for="project">Projet (chemin du dépôt à analyser)</label>
+  <input type="text" id="project" placeholder="Ex. : C:\\Users\\moros\\Desktop\\test_target" value="C:\\Users\\moros\\Desktop\\test_target">
+  <label for="mission" style="margin-top:16px;">Décrivez votre demande en langage courant</label>
   <textarea id="mission" placeholder="Ex. : expliquer ce que fait le fichier de connexion"></textarea>
 
   <div class="actions">
@@ -116,6 +118,7 @@ const CLIENT_TIMEOUT_MS = 120000;   // garde-fou client ; le serveur a le sien.
 
 const out = document.getElementById("out");
 const missionEl = document.getElementById("mission");
+const projectEl = document.getElementById("project");
 const allButtons = ["btn-comprendre", "btn-proposer", "btn-agir"]
   .map(id => document.getElementById(id));
 
@@ -194,6 +197,7 @@ async function callApi(path, body) {
 }
 
 function missionText() { return (missionEl.value || "").trim(); }
+function projectText() { return (projectEl.value || "").trim(); }
 
 // --- COMPRENDRE / PROPOSER : un seul appel /mission, affichage direct ---
 async function runMission(mode, titre) {
@@ -203,7 +207,9 @@ async function runMission(mode, titre) {
   setBusy(true);
   showLoading(titre + " en cours");
   try {
-    const { httpStatus, data } = await callApi("/mission", { mission, mode });
+    const project = projectText();
+    if (!project) { renderError({ error: "PROJET_MANQUANT", reason: "Indiquez le chemin du dépôt à analyser." }); return; }
+    const { httpStatus, data } = await callApi("/mission", { project, mission, mode });
     if (httpStatus !== 200) { renderError(data); return; }
     currentRunId = data.run_id || null;
     clearOut();
@@ -230,8 +236,10 @@ async function runAgirPreview() {
     // Le serveur PRÉPARE (SUPERVISED_APPLY) et s'arrête AVANT toute
     // écriture : il passe en AWAITING_AUTHORIZATION. Le front n'approuve
     // jamais seul ; il affiche l'aperçu et propose Refuser / Autoriser.
+    const project = projectText();
+    if (!project) { renderError({ error: "PROJET_MANQUANT", reason: "Indiquez le chemin du dépôt à analyser." }); return; }
     const { httpStatus, data } = await callApi("/mission",
-      { mission, mode: "SUPERVISED_APPLY" });
+      { project, mission, mode: "SUPERVISED_APPLY" });
     if (httpStatus !== 200) { renderError(data); return; }
     currentRunId = data.run_id || null;
     clearOut();

@@ -67,10 +67,15 @@ _MODE_EXTRA_WONT_DO = {
 # ------------------------------------------------------------------
 
 _STATE_RESULT = {
+    # --- Etats de question / blocage ---
     "QUESTION": "J'ai besoin d'une précision avant de continuer.",
     "AWAIT_HUMAN": ("J'ai préparé une proposition. Rien n'a été modifié. "
                     "Votre autorisation est nécessaire pour continuer."),
     "BLOCKED": "Je ne peux pas continuer dans ces conditions.",
+    "AWAITING_AUTHORIZATION": ("La proposition est prête. Rien n'a été modifié. "
+                                "Votre autorisation est nécessaire pour continuer."),
+    "REFUSED": "Action refusée. Le projet est inchangé.",
+    # --- Etats d'application ---
     "APPLIED": "La modification a été effectuée puis vérifiée.",
     "ROLLED_BACK": ("La modification n'a pas été conservée. "
                     "Le projet a été restauré dans son état initial."),
@@ -78,6 +83,8 @@ _STATE_RESULT = {
                         "automatique n'a pas abouti : une intervention "
                         "humaine est nécessaire."),
     "NO_PATCH_POSSIBLE": "Je n'ai pas trouvé de modification pertinente à proposer.",
+    "ANALYZED": "Analyse terminée. Aucune modification effectuée (lecture seule).",
+    "PROPOSAL_READY": "Proposition prête. Rien n'a été modifié.",
     "OK": "Analyse terminée.",
     "ERROR": "Une erreur est survenue. Aucune modification n'a été effectuée.",
 }
