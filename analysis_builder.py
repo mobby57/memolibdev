@@ -129,7 +129,10 @@ _DETECTORS: tuple[tuple[str, "re.Pattern[str]"], ...] = (
     ("ERROR_HANDLING", re.compile(
         r"\b(try|catch|throw|error|Error|reject|fail)\b")),
     ("CONFIG_KEY", re.compile(
-        r"^\s*[\"']?[A-Za-z0-9_.-]+[\"']?\s*[:=]\s*", )),
+        # Ne matche que les VRAIES cles de config :
+        #   UPPER_SNAKE = ... / "key": "value" / KEY: valeur
+        r"^\s*(?:[\"'][A-Za-z_][A-Za-z0-9_-]*[\"']\s*:|"
+        r"[A-Z][A-Z0-9_]{2,}\s*[:=])", )),
     ("DEFINITION", re.compile(
         r"^\s*(async\s+)?def\s+\w+\s*\(|^\s*class\s+\w+"
         r"|^\s*(export\s+)?(async\s+)?function\s+\w+\s*\("
