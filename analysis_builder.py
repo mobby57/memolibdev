@@ -132,9 +132,13 @@ _DETECTORS: tuple[tuple[str, "re.Pattern[str]"], ...] = (
         r"^\s*[\"']?[A-Za-z0-9_.-]+[\"']?\s*[:=]\s*", )),
     ("DEFINITION", re.compile(
         r"^\s*(async\s+)?def\s+\w+\s*\(|^\s*class\s+\w+"
-        r"|^\s*(export\s+)?(async\s+)?function\s+\w+\s*\(")),
+        r"|^\s*(export\s+)?(async\s+)?function\s+\w+\s*\("
+        r"|^\s*(export\s+)?(const|let|var)\s+\w+\s*=\s*(async\s+)?\("
+        r"|^\s*(export\s+)?(const|let|var)\s+\w+\s*=\s*(async\s+)?function")),
+    ("RETURN", re.compile(r"^\s*return\b")),
+    ("REGEX", re.compile(r"/[^/\s][^/\n]{2,}/[gimsuy]*")),
     ("DOC_HEADING", re.compile(r"^\s*#{1,6}\s+\S")),
-    ("DOC_LIST", re.compile(r"^\s*[-*+]\s+\S")),
+    ("DOC_LIST", re.compile(r"^\s*[-+]\s+\S|^\*\s+\S")),
     ("DOC_TABLE", re.compile(r"^\s*\|.+\|")),
 )
 
@@ -155,9 +159,9 @@ _DOMAIN_RELEVANT_CATEGORIES = {
 # Longueur maximale d'un extrait conservé (bornage déterministe, lisible).
 _MAX_EXCERPT_CHARS = 240
 # Nombre maximal de faits retenus par fichier (évite le bruit, déterministe).
-_MAX_FACTS_PER_FILE = 6
+_MAX_FACTS_PER_FILE = 30
 # Nombre maximal de faits au total (bornage global déterministe).
-_MAX_FACTS_TOTAL = 24
+_MAX_FACTS_TOTAL = 120
 
 
 def _preview_lines(preview: str) -> list[str]:
