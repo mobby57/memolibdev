@@ -161,10 +161,14 @@ def _match_category(text: str, table: dict[str, tuple]) -> str:
 
 
 def _extract_targets(text: str) -> tuple[str, ...]:
-    """Indices de cibles présents LITTÉRALEMENT dans la mission (jamais inventés)."""
+    """Indices de cibles présents LITTÉRALEMENT dans la mission (jamais inventés).
+    Match sur MOTS ENTIERS (\b) pour éviter les faux positifs de sous-chaîne
+    (ex : "ui" dans "puis", "suis", "construis")."""
     found: list[str] = []
     for word, hint in _CIBLE_HINTS.items():
-        if word in text and hint not in found:
+        # re.escape pour les caracteres speciaux, +  pour borner
+        pattern = r"\b" + re.escape(word) + r"\b"
+        if re.search(pattern, text) and hint not in found:
             found.append(hint)
     return tuple(found)
 

@@ -140,18 +140,28 @@ def run_cli(
         return CliResult("ERROR", f"mode inconnu: {mode}")
 
     # 0. Aiguillage : mission de type "document" -> rediriger vers le GUI docs
+    # Regle : ne refuser que si un VERBE de production de document est present
+    # ET qu'aucun VERBE de code n'est present.
     import re as _re
-    _mission_low = mission.lower()
-    _doc_keywords = ("rapport", "facture", "devis", "attestation",
-                     "compte rendu", "compte-rendu", "powerpoint", "ppt",
-                     "excel", "xlsx", "document word", "docx")
-    _doc_hits = [k for k in _doc_keywords if k in _mission_low]
-    if _doc_hits:
+    _ml = mission.lower()
+
+    _verbes_doc = ("genere", "génère", "produis", "produit", "redige", "rédige",
+                   "cree un rapport", "crée un rapport", "fais un rapport",
+                   "fais-moi un rapport", "etablis", "établis")
+    _verbes_code = ("ajoute", "modifie", "corrige", "refactorise", "documente",
+                    "code", "module", "fonction", "classe", "test",
+                    "importe", "exporte", "cree une page", "crée une page",
+                    "bug", "fix", "implement", "implémente")
+
+    _a_verbe_doc = any(v in _ml for v in _verbes_doc)
+    _a_verbe_code = any(v in _ml for v in _verbes_code)
+
+    if _a_verbe_doc and not _a_verbe_code:
         return CliResult(
             "WRONG_TOOL",
-            f"[WRONG_TOOL] Cette mission demande un document ({', '.join(_doc_hits)}). "
-            f"Utilisez plutot memolibdev_doc_gui.py ou create_doc.py --type <facture|devis|...>. "
-            f"Le CLI est reserve a l'analyse et la modification de code.",
+            "[WRONG_TOOL] Cette mission semble demander la production d'un document. "
+            "Utilisez plutot memolibdev_doc_gui.py ou create_doc.py --type <facture|devis|...>. "
+            "Le CLI est reserve a l'analyse et la modification de code.",
         )
 
     # 1. Clarification (fail-closed : on ne devine pas).
