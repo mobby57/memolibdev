@@ -1,7 +1,6 @@
 """Tests sans GUI ni Ollama pour la supervision de sous-processus."""
 
 from __future__ import annotations
-
 import subprocess
 import sys
 import threading
@@ -179,3 +178,4 @@ class GuiProcessSupervisionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+

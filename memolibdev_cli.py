@@ -458,10 +458,12 @@ def main(argv=None) -> int:
     print(f"Modèle : {args.model}")
     print("=" * 60)
 
-    provider = _make_provider(args.model)
-    if not provider.available:
-        print(_safe(f"[STOP] Ollama/modèle {args.model} indisponible."))
-        return 3
+    provider = None
+    if args.mode != "READ_ONLY":
+        provider = _make_provider(args.model)
+        if not provider.available:
+            print(_safe(f"[STOP] Ollama/modèle {args.model} indisponible."))
+            return 3
 
     def verify(repo: Path) -> tuple[bool, str]:
         # VERIFY reel : analyse tous les fichiers modifies ou nouveaux.

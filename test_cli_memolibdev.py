@@ -24,6 +24,9 @@ import hashlib
 import shutil
 import subprocess
 import tempfile
+from types import SimpleNamespace
+import unittest
+from unittest.mock import Mock, patch
 
 from project_target import ProjectTarget
 from coder_authorization import HumanApproval, AuthorityLevel
@@ -83,6 +86,107 @@ def verify_pass_factory(tf: str):
 
 
 CLEAR_MISSION = "mettre à jour la version 1.0 vers 2.0 dans version.ts"
+
+
+class BootstrapCliTests(unittest.TestCase):
+    """Tests unitaires du bootstrap CLI, sans fournisseur, réseau ni Git."""
+
+    @staticmethod
+    def _target():
+        return SimpleNamespace(git_root=Path("C:/fake-project"), head="abc123")
+
+    def test_read_only_skips_provider_and_reaches_orchestration(self):
+        result = cli.CliResult("ANALYZED", "analyse terminée")
+        with patch.dict(cli.os.environ, {}, clear=True), \
+             patch.object(cli, "resolve_target", return_value=self._target()), \
+             patch.object(cli, "_make_provider",
+                          side_effect=AssertionError("provider interdit en READ_ONLY")), \
+             patch.object(cli, "run_cli", return_value=result) as run:
+            exit_code = cli.main([
+                "--project", "C:/fake-project",
+                "--mode", "READ_ONLY",
+                "--mission", "analyse src/version.ts",
+            ])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIsNone(run.call_args.kwargs["provider"])
+        self.assertEqual(run.call_args.kwargs["mode"], "READ_ONLY")
+
+    def test_invalid_target_stops_before_provider_or_orchestration(self):
+        with patch.dict(cli.os.environ, {}, clear=True), \
+             patch.object(cli, "resolve_target",
+                          side_effect=cli.ProjectTargetError("cible invalide")), \
+             patch.object(cli, "_make_provider",
+                          side_effect=AssertionError("provider ne doit pas être créé")), \
+             patch.object(cli, "run_cli",
+                          side_effect=AssertionError("orchestration interdite")):
+            exit_code = cli.main([
+                "--project", "C:/invalid",
+                "--mode", "READ_ONLY",
+                "--mission", "analyse src/version.ts",
+            ])
+
+        self.assertEqual(exit_code, 2)
+
+    def test_non_read_only_modes_keep_provider_availability_gate(self):
+        class UnavailableProvider:
+            def __init__(self):
+                self.available_checks = 0
+
+            @property
+            def available(self):
+                self.available_checks += 1
+                return False
+
+        for mode in ("PROPOSE", "SANDBOX", "SUPERVISED_APPLY"):
+            with self.subTest(mode=mode):
+                provider = UnavailableProvider()
+                with patch.dict(cli.os.environ, {}, clear=True), \
+                     patch.object(cli, "resolve_target", return_value=self._target()), \
+                     patch.object(cli, "_make_provider", return_value=provider) as make_provider, \
+                     patch.object(cli, "run_cli",
+                                  side_effect=AssertionError("orchestration interdite")):
+                    exit_code = cli.main([
+                        "--project", "C:/fake-project",
+                        "--mode", mode,
+                        "--mission", "analyse src/version.ts",
+                    ])
+
+                self.assertEqual(exit_code, 3)
+                make_provider.assert_called_once()
+                self.assertEqual(provider.available_checks, 1)
+
+    def test_read_only_run_cli_forwards_no_provider_and_no_apply(self):
+        report = SimpleNamespace(
+            final_state="ANALYZED",
+            reason="analyse terminée",
+            proposal=None,
+            committed=False,
+            pushed=False,
+        )
+        verify = Mock(side_effect=AssertionError("verify ne doit pas être appelé"))
+
+        with patch.object(cli, "_needs_clarification", return_value=None), \
+             patch.object(cli, "run_from_mission",
+                          return_value=SimpleNamespace(report=report)) as run:
+            result = cli.run_cli(
+                mission="analyse src/version.ts",
+                target=self._target(),
+                mode="READ_ONLY",
+                model="fake",
+                approver=None,
+                provider=object(),
+                verify=verify,
+                input_fn=Mock(),
+                approval_fn=Mock(),
+                provider_timeout_s=None,
+            )
+
+        self.assertEqual(result.status, "ANALYZED")
+        self.assertIsNone(run.call_args.kwargs["provider"])
+        self.assertIsNone(run.call_args.kwargs["action"])
+        self.assertIsNone(run.call_args.kwargs["human_approval"])
+        verify.assert_not_called()
 
 
 def main() -> int:
