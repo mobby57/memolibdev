@@ -82,3 +82,10 @@ _legacy_document_engine/
 __pycache__/
 diagnostic_context_builder.txt
 *.before-*
+
+# Diagnostics locaux (non versionnes)
+blocker_report.txt
+diagnostic_bootstrap_readonly.py
+mission_bootstrap_read_only.txt
+*_bootstrap_*.txt
+*_report.txt
