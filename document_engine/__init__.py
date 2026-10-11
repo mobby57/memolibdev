@@ -1,30 +1,4 @@
-"""API publique du moteur documentaire technique déterministe."""
-from .generator import generate
-from .schema import (
-    ENGINE_VERSION,
-    REPORT_SCHEMA_VERSION,
-    EvidenceRef,
-    GeneratedDocument,
-    HumanDecision,
-    ProjectRef,
-    TechnicalReport,
-    TemplateDefinition,
-    TestResult,
-)
-from .template_registry import load_registered_template
-from .validator import validate_report
-
-__all__ = [
-    "ENGINE_VERSION",
-    "REPORT_SCHEMA_VERSION",
-    "EvidenceRef",
-    "GeneratedDocument",
-    "HumanDecision",
-    "ProjectRef",
-    "TechnicalReport",
-    "TemplateDefinition",
-    "TestResult",
-    "generate",
-    "load_registered_template",
-    "validate_report",
-]
+"""MemoLibDev document engine - v2"""
+from .template_engine import render_template
+from .calculator import compute_totals
+from .config_loader import load_config

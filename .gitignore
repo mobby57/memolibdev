@@ -78,3 +78,5 @@ dist/
 *.v3.bak
 *.v4.bak
 *.v5.bak
+_legacy_document_engine/
+__pycache__/

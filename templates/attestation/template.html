@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Attestation</title>
+<style>{{ css }}</style></head><body>
+
+<table class="hdr" cellpadding="0" cellspacing="0"><tr>
+  <td class="hdr-brand">
+    {% if societe.logo %}<img src="{{ societe.logo }}" class="logo">
+    {% else %}<table cellpadding="0" cellspacing="0" width="56" height="56"><tr>
+      <td bgcolor="#2563eb" align="center" valign="middle" width="56" height="56">
+        <font color="#ffffff" size="6"><b>{{ societe.nom[:1] }}</b></font></td></tr></table>{% endif %}
+  </td>
+  <td class="hdr-title">
+    <div class="doc-title">ATTESTATION</div>
+    <div class="doc-num">{{ type_attestation }}</div>
+  </td>
+</tr></table>
+
+<table class="meta" cellpadding="0" cellspacing="0"><tr>
+  <td class="meta-col">
+    <div class="meta-label">ÉMETTEUR</div>
+    <div class="meta-name">{{ societe.nom }}</div>
+    <div class="meta-line">{{ societe.adresse }}</div>
+    <div class="meta-line">{{ societe.code_postal }} {{ societe.ville }}</div>
+    <div class="meta-line">{{ societe.email }}</div>
+    <div class="meta-line">{{ societe.telephone }}</div>
+    <div class="meta-legal">SIRET {{ societe.siret }}</div>
+  </td>
+  <td class="meta-col meta-col-mid">
+    <div class="meta-label">DESTINATAIRE</div>
+    <div class="meta-name">{{ destinataire.nom }}</div>
+    {% if destinataire.adresse %}<div class="meta-line">{{ destinataire.adresse }}</div>{% endif %}
+    {% if destinataire.qualite %}<div class="meta-line">{{ destinataire.qualite }}</div>{% endif %}
+  </td>
+  <td class="meta-col meta-col-right">
+    <div class="meta-label">DATE</div>
+    <div class="meta-value">{{ date }}</div>
+    <div class="meta-label meta-label-gap">LIEU</div>
+    <div class="meta-value">{{ lieu }}</div>
+  </td>
+</tr></table>
+
+<div class="attestation-body">
+  <div class="attestation-title">Je soussigné(e) {{ signataire.nom }}, {{ signataire.qualite }} de {{ societe.nom }},</div>
+  <div class="attestation-text">{{ corps }}</div>
+  {% if details %}
+  <div class="attestation-details">
+    {% for k, v in details.items() %}
+    <div class="attestation-line"><b>{{ k }} :</b> {{ v }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="attestation-text">Attestation délivrée pour servir et valoir ce que de droit.</div>
+</div>
+
+<table class="signature" cellpadding="0" cellspacing="0"><tr>
+  <td class="signature-left"></td>
+  <td class="signature-right">
+    <div class="signature-lieu">Fait à {{ lieu }}, le {{ date }}</div>
+    <div class="signature-bloc">
+      <div class="signature-nom">{{ signataire.nom }}</div>
+      <div class="signature-qualite">{{ signataire.qualite }}</div>
+    </div>
+    <div class="signature-line">_______________________</div>
+    <div class="signature-caption">Signature et cachet</div>
+  </td>
+</tr></table>
+
+<div id="footer_content">
+  {{ societe.nom }} | SIRET {{ societe.siret }} | Page <pdf:pagenumber /> / <pdf:pagecount />
+</div>
+</body></html>

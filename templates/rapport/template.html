@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>{{ titre }}</title>
+<style>{{ css }}</style></head><body>
+
+<table class="hdr" cellpadding="0" cellspacing="0"><tr>
+  <td class="hdr-brand">
+    {% if societe.logo %}<img src="{{ societe.logo }}" class="logo">
+    {% else %}<table cellpadding="0" cellspacing="0" width="56" height="56"><tr>
+      <td bgcolor="#2563eb" align="center" valign="middle" width="56" height="56">
+        <font color="#ffffff" size="6"><b>{{ societe.nom[:1] }}</b></font></td></tr></table>{% endif %}
+  </td>
+  <td class="hdr-title">
+    <div class="doc-title">RAPPORT</div>
+    <div class="doc-num">{{ numero }}</div>
+  </td>
+</tr></table>
+
+<table class="meta" cellpadding="0" cellspacing="0"><tr>
+  <td class="meta-col">
+    <div class="meta-label">EMETTEUR</div>
+    <div class="meta-name">{{ societe.nom }}</div>
+    <div class="meta-line">{{ societe.adresse }}</div>
+    <div class="meta-line">{{ societe.code_postal }} {{ societe.ville }}</div>
+    <div class="meta-legal">SIRET {{ societe.siret }}</div>
+  </td>
+  <td class="meta-col meta-col-mid">
+    <div class="meta-label">DESTINATAIRE</div>
+    <div class="meta-name">{{ destinataire.nom }}</div>
+    {% if destinataire.qualite %}<div class="meta-line">{{ destinataire.qualite }}</div>{% endif %}
+  </td>
+  <td class="meta-col meta-col-right">
+    <div class="meta-label">DATE</div>
+    <div class="meta-value">{{ date }}</div>
+    {% if periode %}<div class="meta-label meta-label-gap">PERIODE</div><div class="meta-value">{{ periode }}</div>{% endif %}
+  </td>
+</tr></table>
+
+<div class="rapport-titre-block">
+  <div class="rapport-titre">{{ titre }}</div>
+  {% if sous_titre %}<div class="rapport-sous-titre">{{ sous_titre }}</div>{% endif %}
+</div>
+
+{% if resume_executif %}
+<div class="section">
+  <div class="section-title">RESUME EXECUTIF</div>
+  <div class="section-text">{{ resume_executif }}</div>
+</div>
+{% endif %}
+
+{% for s in sections %}
+<div class="section">
+  <div class="section-title">{{ s.titre }}</div>
+  {% if s.texte %}<div class="section-text">{{ s.texte }}</div>{% endif %}
+  {% if s.points %}
+  <ul class="section-list">{% for p in s.points %}<li>{{ p }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if s.tableau %}
+  <table class="r-table" cellpadding="0" cellspacing="0">
+    <thead><tr>{% for h in s.tableau.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in s.tableau.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+</div>
+{% endfor %}
+
+{% if recommandations %}
+<div class="section section-hl">
+  <div class="section-title">RECOMMANDATIONS</div>
+  <ul class="section-list">{% for r in recommandations %}<li>{{ r }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% if conclusion %}
+<div class="section">
+  <div class="section-title">CONCLUSION</div>
+  <div class="section-text">{{ conclusion }}</div>
+</div>
+{% endif %}
+
+<div id="footer_content">
+  {{ societe.nom }} | {{ titre }} | Page <pdf:pagenumber /> / <pdf:pagecount />
+</div>
+</body></html>

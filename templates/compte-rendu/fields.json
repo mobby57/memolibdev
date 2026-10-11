@@ -1,0 +1,42 @@
+{
+  "template": "compte-rendu",
+  "description": "Compte rendu de reunion avec actions",
+  "champs": {
+    "titre": {
+      "obligatoire": true,
+      "question": "Titre de la reunion",
+      "exemple": "Reunion hebdomadaire equipe produit"
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date de la reunion",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "heure_debut": {
+      "obligatoire": true,
+      "question": "Heure de debut (HH:MM)",
+      "exemple": "14:00"
+    },
+    "heure_fin": {
+      "obligatoire": true,
+      "question": "Heure de fin (HH:MM)",
+      "exemple": "15:30"
+    },
+    "lieu": {
+      "obligatoire": false,
+      "question": "Lieu de la reunion",
+      "defaut": "Salle de reunion"
+    },
+    "redacteur": {
+      "obligatoire": true,
+      "question": "Redacteur du compte rendu",
+      "exemple": "Marie Durand"
+    },
+    "prochaine_reunion": {
+      "obligatoire": false,
+      "question": "Prochaine reunion (date et lieu)",
+      "defaut": ""
+    }
+  }
+}

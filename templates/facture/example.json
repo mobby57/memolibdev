@@ -1,0 +1,26 @@
+{
+  "numero_sequence": 42,
+  "date": "11/10/2026",
+  "date_echeance": "10/11/2026",
+  "date_prestation": "05/10/2026",
+  "client": {
+    "nom": "Monsieur Dupont",
+    "adresse": "5 avenue des Champs",
+    "code_postal": "69001",
+    "ville": "Lyon",
+    "email": "dupont@example.fr"
+  },
+  "objet": "Prestation de développement logiciel",
+  "lignes": [
+    {
+      "description": "Développement module auth",
+      "quantite": 3,
+      "prix_ht": 500
+    },
+    {
+      "description": "Tests et documentation",
+      "quantite": 1,
+      "prix_ht": 300
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "template": "planning",
+  "description": "Planning de projet au format Excel",
+  "champs": {
+    "projet": {
+      "obligatoire": true,
+      "question": "Nom du projet",
+      "exemple": "Refonte du site e-commerce"
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date du planning",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "chef_projet": {
+      "obligatoire": true,
+      "question": "Chef de projet",
+      "exemple": "Marie Durand"
+    }
+  }
+}

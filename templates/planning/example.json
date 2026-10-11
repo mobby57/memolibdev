@@ -1,0 +1,87 @@
+{
+  "projet": "Refonte du site e-commerce",
+  "date": "11/10/2026",
+  "chef_projet": "Marie Durand",
+  "taches": [
+    {
+      "nom": "Cadrage et collecte des besoins",
+      "responsable": "Marie Durand",
+      "debut": "01/10/2026",
+      "fin": "07/10/2026",
+      "avancement": 100,
+      "statut": "Termine"
+    },
+    {
+      "nom": "Maquettes UX/UI",
+      "responsable": "Sophie Martin",
+      "debut": "08/10/2026",
+      "fin": "18/10/2026",
+      "avancement": 60,
+      "statut": "En cours"
+    },
+    {
+      "nom": "Developpement front-end",
+      "responsable": "Lucas Petit",
+      "debut": "15/10/2026",
+      "fin": "05/11/2026",
+      "avancement": 20,
+      "statut": "En cours"
+    },
+    {
+      "nom": "Developpement back-end",
+      "responsable": "Antoine Leroy",
+      "debut": "15/10/2026",
+      "fin": "10/11/2026",
+      "avancement": 15,
+      "statut": "En cours"
+    },
+    {
+      "nom": "Integration paiement",
+      "responsable": "Lucas Petit",
+      "debut": "06/11/2026",
+      "fin": "15/11/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    },
+    {
+      "nom": "Tests et QA",
+      "responsable": "Antoine Leroy",
+      "debut": "16/11/2026",
+      "fin": "25/11/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    },
+    {
+      "nom": "Recette client",
+      "responsable": "Marie Durand",
+      "debut": "26/11/2026",
+      "fin": "30/11/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    },
+    {
+      "nom": "Mise en production",
+      "responsable": "Lucas Petit",
+      "debut": "01/12/2026",
+      "fin": "03/12/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    },
+    {
+      "nom": "Formation utilisateurs",
+      "responsable": "Marie Durand",
+      "debut": "04/12/2026",
+      "fin": "06/12/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    },
+    {
+      "nom": "Livraison finale",
+      "responsable": "Marie Durand",
+      "debut": "07/12/2026",
+      "fin": "07/12/2026",
+      "avancement": 0,
+      "statut": "A faire"
+    }
+  ]
+}

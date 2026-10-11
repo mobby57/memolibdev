@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Compte rendu {{ numero }}</title>
+<style>{{ css }}</style></head><body>
+
+<table class="hdr" cellpadding="0" cellspacing="0"><tr>
+  <td class="hdr-brand">
+    {% if societe.logo %}<img src="{{ societe.logo }}" class="logo">
+    {% else %}<table cellpadding="0" cellspacing="0" width="56" height="56"><tr>
+      <td bgcolor="#2563eb" align="center" valign="middle" width="56" height="56">
+        <font color="#ffffff" size="6"><b>{{ societe.nom[:1] }}</b></font></td></tr></table>{% endif %}
+  </td>
+  <td class="hdr-title">
+    <div class="doc-title">COMPTE RENDU</div>
+    <div class="doc-num">{{ numero }}</div>
+  </td>
+</tr></table>
+
+<table class="meta" cellpadding="0" cellspacing="0"><tr>
+  <td class="meta-col">
+    <div class="meta-label">RÉUNION</div>
+    <div class="meta-name">{{ titre }}</div>
+    <div class="meta-line">{{ date }} · {{ heure_debut }} - {{ heure_fin }}</div>
+    <div class="meta-line">{{ lieu }}</div>
+  </td>
+  <td class="meta-col meta-col-mid">
+    <div class="meta-label">PARTICIPANTS ({{ participants|length }})</div>
+    {% for p in participants %}
+    <div class="meta-line">{{ p.nom }}{% if p.role %} · {{ p.role }}{% endif %}{% if p.absent %} (absent){% endif %}</div>
+    {% endfor %}
+  </td>
+  <td class="meta-col meta-col-right">
+    <div class="meta-label">RÉDIGÉ PAR</div>
+    <div class="meta-value">{{ redacteur }}</div>
+  </td>
+</tr></table>
+
+<div class="section">
+  <div class="section-title">ORDRE DU JOUR</div>
+  <ol class="section-list">{% for item in ordre_du_jour %}<li>{{ item }}</li>{% endfor %}</ol>
+</div>
+
+{% for point in points %}
+<div class="section">
+  <div class="section-title">{{ point.titre }}</div>
+  {% if point.discussion %}<div class="section-text">{{ point.discussion }}</div>{% endif %}
+  {% if point.decisions %}
+  <div class="sub-title">Décisions</div>
+  <ul class="section-list">{% for d in point.decisions %}<li>{{ d }}</li>{% endfor %}</ul>
+  {% endif %}
+</div>
+{% endfor %}
+
+<div class="section">
+  <div class="section-title">ACTIONS À MENER</div>
+  <table class="actions" cellpadding="0" cellspacing="0">
+    <thead><tr>
+      <th class="act-desc">ACTION</th>
+      <th class="act-who">RESPONSABLE</th>
+      <th class="act-when">ÉCHÉANCE</th>
+    </tr></thead>
+    <tbody>{% for a in actions %}<tr>
+      <td class="act-desc">{{ a.description }}</td>
+      <td class="act-who">{{ a.responsable }}</td>
+      <td class="act-when">{{ a.echeance }}</td>
+    </tr>{% endfor %}</tbody>
+  </table>
+</div>
+
+{% if prochaine_reunion %}
+<div class="section section-hl">
+  <div class="section-title">PROCHAINE RÉUNION</div>
+  <div class="section-text">{{ prochaine_reunion }}</div>
+</div>
+{% endif %}
+
+<div id="footer_content">
+  {{ societe.nom }} | {{ titre }} | Page <pdf:pagenumber /> / <pdf:pagecount />
+</div>
+</body></html>

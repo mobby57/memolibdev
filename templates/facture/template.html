@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>Facture {{ numero }}</title>
+<style>{{ css }}</style></head>
+<body>
+
+<table class="hdr" cellpadding="0" cellspacing="0">
+  <tr>
+    <td class="hdr-brand">
+      {% if societe.logo %}<img src="{{ societe.logo }}" class="logo">
+      {% else %}
+      <table cellpadding="0" cellspacing="0" width="56" height="56"><tr>
+        <td bgcolor="#2563eb" align="center" valign="middle" width="56" height="56">
+          <font color="#ffffff" size="6"><b>{{ societe.nom[:1] }}</b></font>
+        </td></tr></table>
+      {% endif %}
+    </td>
+    <td class="hdr-title">
+      <div class="doc-title">FACTURE</div>
+      <div class="doc-num">{{ numero }}</div>
+    </td>
+  </tr>
+</table>
+
+<table class="meta" cellpadding="0" cellspacing="0"><tr>
+  <td class="meta-col">
+    <div class="meta-label">ÉMETTEUR</div>
+    <div class="meta-name">{{ societe.nom }}</div>
+    <div class="meta-line">{{ societe.adresse }}</div>
+    <div class="meta-line">{{ societe.code_postal }} {{ societe.ville }}</div>
+    <div class="meta-line">{{ societe.email }}</div>
+    <div class="meta-line">{{ societe.telephone }}</div>
+    <div class="meta-legal">SIRET {{ societe.siret }}</div>
+    <div class="meta-legal">TVA {{ societe.tva_intracom }}</div>
+    {% if societe.rcs %}<div class="meta-legal">RCS {{ societe.rcs }}</div>{% endif %}
+    {% if societe.capital %}<div class="meta-legal">Capital {{ societe.capital }}</div>{% endif %}
+  </td>
+  <td class="meta-col meta-col-mid">
+    <div class="meta-label">FACTURÉ À</div>
+    <div class="meta-name">{{ client.nom }}</div>
+    {% if client.adresse %}<div class="meta-line">{{ client.adresse }}</div>{% endif %}
+    {% if client.code_postal %}<div class="meta-line">{{ client.code_postal }} {{ client.ville }}</div>{% endif %}
+    {% if client.email %}<div class="meta-line">{{ client.email }}</div>{% endif %}
+    {% if client.tva_intracom %}<div class="meta-legal">TVA {{ client.tva_intracom }}</div>{% endif %}
+  </td>
+  <td class="meta-col meta-col-right">
+    <div class="meta-label">DATE D'ÉMISSION</div>
+    <div class="meta-value">{{ date }}</div>
+    <div class="meta-label meta-label-gap">DATE DE PRESTATION</div>
+    <div class="meta-value">{{ date_prestation }}</div>
+    {% if date_echeance %}
+    <div class="meta-label meta-label-gap">ÉCHÉANCE</div>
+    <div class="meta-value meta-value-urgent">{{ date_echeance }}</div>
+    {% endif %}
+  </td>
+</tr></table>
+
+<table class="hero" cellpadding="0" cellspacing="0"><tr>
+  <td class="hero-left">
+    {% if objet %}<div class="hero-objet">{{ objet }}</div>{% endif %}
+    <div class="hero-hint">Merci de régler avant le {{ date_echeance or date }}</div>
+  </td>
+  <td class="hero-right">
+    <div class="hero-label">TOTAL À PAYER</div>
+    <div class="hero-amount">{{ total_ttc }}</div>
+    <div class="hero-sub">dont TVA {{ total_tva }}</div>
+  </td>
+</tr></table>
+
+<table class="lines" cellpadding="0" cellspacing="0">
+  <thead><tr>
+    <th class="th-desc">DESCRIPTION</th>
+    <th class="th-num">QTÉ</th>
+    <th class="th-num">PRIX HT</th>
+    <th class="th-num">TVA</th>
+    <th class="th-num">TOTAL HT</th>
+  </tr></thead>
+  <tbody>
+    {% for l in lignes %}
+    <tr>
+      <td class="td-desc">{{ l.description }}</td>
+      <td class="td-num">{{ l.quantite }}</td>
+      <td class="td-num">{{ l.prix_ht_fr }}</td>
+      <td class="td-num">{{ l.tva_pct_fr }}</td>
+      <td class="td-num td-strong">{{ l.ligne_ht_fr }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<table class="tot" cellpadding="0" cellspacing="0">
+  <tr><td class="tot-label">Sous-total HT</td><td class="tot-val">{{ total_ht }}</td></tr>
+  <tr><td class="tot-label">TVA ({{ tva_pct }} %)</td><td class="tot-val">{{ total_tva }}</td></tr>
+  <tr class="tot-grand"><td class="tot-grand-label">TOTAL TTC</td><td class="tot-grand-val">{{ total_ttc }}</td></tr>
+</table>
+
+<!-- BLOC 2 COLONNES : PAIEMENT + MENTIONS -->
+<table class="bottom-block" cellpadding="0" cellspacing="0"><tr>
+  <td class="bottom-pay">
+    <div class="pay-label">COORDONNÉES BANCAIRES</div>
+    {% if societe.iban %}<div class="pay-line"><b>IBAN :</b> {{ societe.iban }}</div>{% endif %}
+    {% if societe.bic %}<div class="pay-line"><b>BIC :</b> {{ societe.bic }}</div>{% endif %}
+    {% if societe.banque %}<div class="pay-line">{{ societe.banque }}</div>{% endif %}
+    <div class="pay-ref">Référence : {{ numero }}</div>
+    {% if qr_code_data_uri %}
+    <div class="qr-wrap">
+      <img src="{{ qr_code_data_uri }}" class="qr">
+      <div class="qr-caption">Scannez pour payer</div>
+    </div>
+    {% endif %}
+  </td>
+  <td class="bottom-legal">
+    <div class="legal-title">MENTIONS LÉGALES</div>
+    <div class="legal-line">{{ mentions.conditions_paiement }}</div>
+    <div class="legal-line">{{ mentions.penalites_retard }}</div>
+    <div class="legal-line">{{ mentions.indemnite_recouvrement }}</div>
+    {% if mentions.tva_non_applicable %}<div class="legal-line">{{ mentions.tva_non_applicable }}</div>{% endif %}
+  </td>
+</tr></table>
+
+<div id="footer_content">
+  {{ societe.nom }} | {{ societe.adresse }}, {{ societe.code_postal }} {{ societe.ville }} | SIRET {{ societe.siret }} | Page <pdf:pagenumber /> / <pdf:pagecount />
+</div>
+
+</body></html>

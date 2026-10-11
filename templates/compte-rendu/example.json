@@ -1,0 +1,69 @@
+{
+  "numero_sequence": 8,
+  "titre": "Réunion hebdomadaire équipe produit",
+  "date": "11/10/2026",
+  "heure_debut": "14:00",
+  "heure_fin": "15:30",
+  "lieu": "Salle B - Visio",
+  "redacteur": "Marie Durand",
+  "participants": [
+    {
+      "nom": "Marie Durand",
+      "role": "Chef de projet"
+    },
+    {
+      "nom": "Lucas Petit",
+      "role": "Développeur"
+    },
+    {
+      "nom": "Sophie Martin",
+      "role": "Designer"
+    },
+    {
+      "nom": "Antoine Leroy",
+      "role": "QA",
+      "absent": true
+    }
+  ],
+  "ordre_du_jour": [
+    "Avancement du sprint 14",
+    "Retours utilisateurs sur la nouvelle version",
+    "Planification du sprint 15",
+    "Questions diverses"
+  ],
+  "points": [
+    {
+      "titre": "Avancement du sprint 14",
+      "discussion": "4 tickets sur 6 terminés. Les 2 restants concernent l'intégration du paiement et sont bloqués par un problème d'API externe.",
+      "decisions": [
+        "Contacter le fournisseur de paiement avant vendredi",
+        "Reporter les 2 tickets au sprint 15 si non résolus"
+      ]
+    },
+    {
+      "titre": "Retours utilisateurs",
+      "discussion": "12 retours reçus cette semaine. Principal point négatif : la lenteur du chargement de la page d'accueil.",
+      "decisions": [
+        "Prioriser l'optimisation des performances pour le sprint 15"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "description": "Contacter le fournisseur de paiement",
+      "responsable": "Marie Durand",
+      "echeance": "13/10/2026"
+    },
+    {
+      "description": "Analyser les performances de la page d'accueil",
+      "responsable": "Lucas Petit",
+      "echeance": "14/10/2026"
+    },
+    {
+      "description": "Préparer les maquettes v2",
+      "responsable": "Sophie Martin",
+      "echeance": "16/10/2026"
+    }
+  ],
+  "prochaine_reunion": "Lundi 18 octobre 2026, 14h00, salle B"
+}

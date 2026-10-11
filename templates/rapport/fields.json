@@ -1,0 +1,47 @@
+{
+  "template": "rapport",
+  "description": "Rapport d'activite ou d'analyse",
+  "champs": {
+    "titre": {
+      "obligatoire": true,
+      "question": "Titre du rapport",
+      "exemple": "Rapport d'activite Q4 2026"
+    },
+    "sous_titre": {
+      "obligatoire": false,
+      "question": "Sous-titre",
+      "defaut": ""
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date d'emission",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "periode": {
+      "obligatoire": false,
+      "question": "Periode couverte",
+      "exemple": "Octobre - Decembre 2026"
+    },
+    "destinataire.nom": {
+      "obligatoire": true,
+      "question": "Nom du destinataire",
+      "exemple": "Conseil d'administration"
+    },
+    "destinataire.qualite": {
+      "obligatoire": false,
+      "question": "Qualite du destinataire",
+      "defaut": ""
+    },
+    "resume_executif": {
+      "obligatoire": true,
+      "question": "Resume executif (2-3 phrases)",
+      "exemple": "Le trimestre affiche une croissance de 18% ..."
+    },
+    "conclusion": {
+      "obligatoire": false,
+      "question": "Conclusion",
+      "defaut": ""
+    }
+  }
+}

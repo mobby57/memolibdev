@@ -1,0 +1,80 @@
+{
+  "template": "facture",
+  "description": "Facture commerciale conforme (mentions legales FR)",
+  "champs": {
+    "client.nom": {
+      "obligatoire": true,
+      "question": "Nom du client (ou raison sociale)",
+      "type": "texte",
+      "exemple": "Monsieur Dupont / SARL Batir Plus"
+    },
+    "client.adresse": {
+      "obligatoire": false,
+      "question": "Adresse du client (rue)",
+      "type": "texte",
+      "defaut": ""
+    },
+    "client.code_postal": {
+      "obligatoire": false,
+      "question": "Code postal",
+      "type": "texte",
+      "defaut": ""
+    },
+    "client.ville": {
+      "obligatoire": false,
+      "question": "Ville",
+      "type": "texte",
+      "defaut": ""
+    },
+    "objet": {
+      "obligatoire": false,
+      "question": "Objet de la facture",
+      "type": "texte",
+      "defaut": "Prestation de service"
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date d'emission (JJ/MM/AAAA)",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "date_echeance": {
+      "obligatoire": false,
+      "question": "Date d'echeance (JJ/MM/AAAA)",
+      "type": "date",
+      "defaut": "+30 jours"
+    },
+    "numero_sequence": {
+      "obligatoire": false,
+      "question": "Numero de facture (nombre entier)",
+      "type": "entier",
+      "defaut": "auto"
+    },
+    "lignes": {
+      "obligatoire": true,
+      "question": "Lignes de la facture (voir sous-questions)",
+      "type": "liste",
+      "sous_champs": {
+        "description": {
+          "obligatoire": true,
+          "question": "Description"
+        },
+        "quantite": {
+          "obligatoire": true,
+          "question": "Quantite",
+          "type": "nombre"
+        },
+        "prix_ht": {
+          "obligatoire": true,
+          "question": "Prix unitaire HT",
+          "type": "nombre"
+        },
+        "tva_pct": {
+          "obligatoire": false,
+          "question": "Taux TVA %",
+          "defaut": "20"
+        }
+      }
+    }
+  }
+}

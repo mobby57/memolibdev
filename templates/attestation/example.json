@@ -1,0 +1,21 @@
+{
+  "type_attestation": "Attestation de travail",
+  "date": "11/10/2026",
+  "lieu": "Paris",
+  "signataire": {
+    "nom": "Jean Martin",
+    "qualite": "Directeur Général"
+  },
+  "destinataire": {
+    "nom": "Madame Sophie Leroy",
+    "adresse": "14 rue Pasteur, 75015 Paris",
+    "qualite": "Salariée depuis le 01/03/2022"
+  },
+  "corps": "J'atteste que Madame Sophie Leroy est employée au sein de notre société en qualité de Responsable Marketing depuis le 1er mars 2022, dans le cadre d'un contrat à durée indéterminée à temps plein.",
+  "details": {
+    "Poste occupé": "Responsable Marketing",
+    "Date d'embauche": "01/03/2022",
+    "Type de contrat": "CDI - Temps plein",
+    "Convention collective": "SYNTEC"
+  }
+}

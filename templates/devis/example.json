@@ -1,0 +1,34 @@
+{
+  "numero_sequence": 17,
+  "date": "11/10/2026",
+  "date_validite": "10/11/2026",
+  "validite_jours": 30,
+  "client": {
+    "nom": "SARL Bâtir Plus",
+    "adresse": "8 rue des Artisans",
+    "code_postal": "33000",
+    "ville": "Bordeaux",
+    "email": "contact@batirplus.fr"
+  },
+  "objet": "Rénovation salle de réunion",
+  "conditions": "Prix ferme et non révisable. TVA 20 %.",
+  "acompte_pct": 30,
+  "delai_execution": "6 semaines à compter de la signature",
+  "lignes": [
+    {
+      "description": "Démolition et évacuation",
+      "quantite": 1,
+      "prix_ht": 1200
+    },
+    {
+      "description": "Peinture murs et plafond",
+      "quantite": 45,
+      "prix_ht": 25
+    },
+    {
+      "description": "Pose parquet chêne",
+      "quantite": 30,
+      "prix_ht": 60
+    }
+  ]
+}

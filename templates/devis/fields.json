@@ -1,0 +1,101 @@
+{
+  "template": "devis",
+  "description": "Devis commercial avec bon pour accord",
+  "champs": {
+    "client.nom": {
+      "obligatoire": true,
+      "question": "Nom du client (ou raison sociale)",
+      "exemple": "SARL Batir Plus"
+    },
+    "client.adresse": {
+      "obligatoire": false,
+      "question": "Adresse du client",
+      "defaut": ""
+    },
+    "client.code_postal": {
+      "obligatoire": false,
+      "question": "Code postal",
+      "defaut": ""
+    },
+    "client.ville": {
+      "obligatoire": false,
+      "question": "Ville",
+      "defaut": ""
+    },
+    "client.email": {
+      "obligatoire": false,
+      "question": "Email du client",
+      "defaut": ""
+    },
+    "objet": {
+      "obligatoire": true,
+      "question": "Objet du devis",
+      "exemple": "Renovation salle de reunion"
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date d'emission",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "date_validite": {
+      "obligatoire": false,
+      "question": "Valable jusqu'au",
+      "type": "date",
+      "defaut": "+30 jours"
+    },
+    "validite_jours": {
+      "obligatoire": false,
+      "question": "Validite en jours",
+      "type": "entier",
+      "defaut": "30"
+    },
+    "conditions": {
+      "obligatoire": false,
+      "question": "Conditions particulieres",
+      "defaut": "Prix ferme et non revisable."
+    },
+    "acompte_pct": {
+      "obligatoire": false,
+      "question": "Acompte a la commande (%)",
+      "defaut": "30"
+    },
+    "delai_execution": {
+      "obligatoire": false,
+      "question": "Delai d'execution",
+      "defaut": "6 semaines"
+    },
+    "numero_sequence": {
+      "obligatoire": false,
+      "question": "Numero de devis",
+      "type": "entier",
+      "defaut": "auto"
+    },
+    "lignes": {
+      "obligatoire": true,
+      "question": "Lignes du devis",
+      "type": "liste",
+      "sous_champs": {
+        "description": {
+          "obligatoire": true,
+          "question": "Description"
+        },
+        "quantite": {
+          "obligatoire": true,
+          "question": "Quantite",
+          "type": "nombre"
+        },
+        "prix_ht": {
+          "obligatoire": true,
+          "question": "Prix unitaire HT",
+          "type": "nombre"
+        },
+        "tva_pct": {
+          "obligatoire": false,
+          "question": "Taux TVA %",
+          "defaut": "20"
+        }
+      }
+    }
+  }
+}

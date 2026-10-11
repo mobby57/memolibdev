@@ -1,0 +1,32 @@
+{
+  "societe": {
+    "nom": "Mon Entreprise SAS",
+    "adresse": "12 rue de la Paix",
+    "code_postal": "75001",
+    "ville": "Paris",
+    "email": "contact@mon-entreprise.fr",
+    "telephone": "+33 1 23 45 67 89",
+    "siret": "123 456 789 00012",
+    "tva_intracom": "FR12345678900",
+    "logo": ""
+  },
+  "couleurs": {
+    "primaire": "#2563eb",
+    "texte": "#0f172a",
+    "gris": "#64748b"
+  },
+  "mentions": {
+    "conditions_paiement": "",
+    "penalites_retard": "",
+    "indemnite_recouvrement": "",
+    "tva_non_applicable": ""
+  },
+  "numerotation": {
+    "prefixe": "CR",
+    "format": "{prefixe}-{annee}-{numero:04d}"
+  },
+  "tva": {
+    "taux_defaut": 20.0,
+    "devise": "EUR"
+  }
+}

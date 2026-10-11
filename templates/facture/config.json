@@ -1,0 +1,41 @@
+{
+  "societe": {
+    "nom": "Mon Entreprise SAS",
+    "adresse": "12 rue de la Paix",
+    "code_postal": "75001",
+    "ville": "Paris",
+    "telephone": "+33 1 23 45 67 89",
+    "email": "contact@mon-entreprise.fr",
+    "siret": "123 456 789 00012",
+    "tva_intracom": "FR12345678900",
+    "rcs": "Paris B 123 456 789",
+    "capital": "10 000 EUR",
+    "logo": "",
+    "iban": "FR76 1234 5678 9012 3456 7890 123",
+    "bic": "BNPAFRPPXXX",
+    "banque": "BNP Paribas - Paris Centre"
+  },
+  "couleurs": {
+    "primaire": "#2563eb",
+    "texte": "#0f172a",
+    "gris": "#64748b"
+  },
+  "mentions": {
+    "conditions_paiement": "Paiement à 30 jours date de facture, par virement bancaire.",
+    "penalites_retard": "Pénalités de retard : 3 fois le taux d'intérêt légal en vigueur.",
+    "indemnite_recouvrement": "Indemnité forfaitaire pour frais de recouvrement : 40 € (art. D. 441-5 du Code de commerce).",
+    "tva_non_applicable": ""
+  },
+  "numerotation": {
+    "prefixe": "FA",
+    "format": "{prefixe}-{annee}-{numero:04d}"
+  },
+  "tva": {
+    "taux_defaut": 20.0,
+    "devise": "EUR"
+  },
+  "paiement": {
+    "qr_code": true,
+    "qr_data_template": "BCD\n002\n1\nSCT\n{bic}\n{nom}\n{iban}\n{devise}{total_ttc}\n\n\nReference {numero}"
+  }
+}

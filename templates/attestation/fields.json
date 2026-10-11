@@ -1,0 +1,52 @@
+{
+  "template": "attestation",
+  "description": "Attestation officielle (travail, stage, domicile, etc.)",
+  "champs": {
+    "type_attestation": {
+      "obligatoire": true,
+      "question": "Type d'attestation",
+      "exemple": "Attestation de travail"
+    },
+    "date": {
+      "obligatoire": false,
+      "question": "Date d'emission",
+      "type": "date",
+      "defaut": "aujourd'hui"
+    },
+    "lieu": {
+      "obligatoire": true,
+      "question": "Lieu d'emission",
+      "exemple": "Paris"
+    },
+    "signataire.nom": {
+      "obligatoire": true,
+      "question": "Nom du signataire",
+      "exemple": "Jean Martin"
+    },
+    "signataire.qualite": {
+      "obligatoire": true,
+      "question": "Qualite du signataire",
+      "exemple": "Directeur General"
+    },
+    "destinataire.nom": {
+      "obligatoire": true,
+      "question": "Nom du destinataire",
+      "exemple": "Madame Sophie Leroy"
+    },
+    "destinataire.adresse": {
+      "obligatoire": false,
+      "question": "Adresse du destinataire",
+      "defaut": ""
+    },
+    "destinataire.qualite": {
+      "obligatoire": false,
+      "question": "Qualite du destinataire",
+      "defaut": ""
+    },
+    "corps": {
+      "obligatoire": true,
+      "question": "Texte de l'attestation",
+      "exemple": "J'atteste que ... est employe(e) au sein de notre societe depuis le ..."
+    }
+  }
+}

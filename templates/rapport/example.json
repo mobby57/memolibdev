@@ -1,0 +1,80 @@
+{
+  "numero_sequence": 3,
+  "titre": "Rapport d activite trimestriel Q4 2026",
+  "sous_titre": "Analyse des performances et perspectives",
+  "date": "11/10/2026",
+  "periode": "Octobre - Decembre 2026",
+  "destinataire": {
+    "nom": "Conseil d administration",
+    "qualite": "Direction generale"
+  },
+  "resume_executif": "Le trimestre Q4 2026 affiche une croissance de 18 % du chiffre d affaires par rapport au trimestre precedent. Les objectifs fixes ont ete atteints a 112 %. Les principaux leviers de croissance sont l acquisition de 3 nouveaux clients grands comptes et l augmentation du panier moyen de 12 %.",
+  "sections": [
+    {
+      "titre": "Contexte",
+      "texte": "Cette analyse couvre la periode octobre-decembre 2026. Elle s inscrit dans le suivi trimestriel mis en place par la direction pour piloter la croissance et anticiper les besoins en ressources."
+    },
+    {
+      "titre": "Resultats commerciaux",
+      "texte": "Le chiffre d affaires s eleve a 1 250 000 EUR sur la periode, en progression de 18 % par rapport au trimestre precedent.",
+      "tableau": {
+        "headers": [
+          "Indicateur",
+          "T3 2026",
+          "T4 2026",
+          "Variation"
+        ],
+        "rows": [
+          [
+            "Chiffre d affaires",
+            "1 059 000 EUR",
+            "1 250 000 EUR",
+            "+18 %"
+          ],
+          [
+            "Nouveaux clients",
+            "12",
+            "15",
+            "+25 %"
+          ],
+          [
+            "Panier moyen",
+            "3 200 EUR",
+            "3 584 EUR",
+            "+12 %"
+          ],
+          [
+            "Taux de conversion",
+            "3,1 %",
+            "3,8 %",
+            "+22 %"
+          ]
+        ]
+      }
+    },
+    {
+      "titre": "Faits marquants",
+      "points": [
+        "Signature de 3 nouveaux contrats avec des clients grands comptes.",
+        "Lancement reussi de la nouvelle version de la plateforme, avec un taux d adoption de 78 % en 3 semaines.",
+        "Recrutement de 2 developpeurs pour renforcer l equipe produit.",
+        "Certification ISO 27001 obtenue, ouvrant l acces au marche des entreprises regulees."
+      ]
+    },
+    {
+      "titre": "Points de vigilance",
+      "points": [
+        "Delai de traitement des tickets support : +15 % par rapport au trimestre precedent.",
+        "Cout d acquisition client en hausse de 8 %.",
+        "Taux de rotation des equipes techniques a surveiller (2 departs en Q4)."
+      ]
+    }
+  ],
+  "recommandations": [
+    "Renforcer l equipe support de 1 ETP pour absorber la croissance.",
+    "Investir dans l automatisation du marketing pour contenir le cout d acquisition.",
+    "Mettre en place un programme de fidelisation pour les equipes techniques.",
+    "Cibler 5 grands comptes supplementaires sur le premier trimestre 2027."
+  ],
+  "conclusion": "Le trimestre Q4 2026 confirme la trajectoire de croissance de l entreprise et la pertinence de sa strategie produit. Les investissements realises posent les fondations d une acceleration en 2027."
+}
