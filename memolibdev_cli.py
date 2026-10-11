@@ -99,7 +99,7 @@ def _needs_clarification(mission_text: str, target: ProjectTarget) -> Optional[s
 
     # Construction read-only d'un contexte sonde.
     ctx = build_mission_context("clarify-probe", mission_text, target,
-                                max_files=8, max_context_chars=4000)
+                                max_files=8, max_context_chars=20000)
     if not ctx.relevant_files:
         return ("Je n'ai identifié aucun fichier pertinent pour cette "
                 "mission. Peux-tu préciser le module, le chemin ou la "
