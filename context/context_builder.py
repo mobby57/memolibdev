@@ -344,6 +344,34 @@ def _apply_context_budget(ranked: list[dict], *,
     return selected, metrics
 
 
+_ESSENTIAL_ROOT_PRIORITY = (
+    "readme.md", "readme.rst", "readme.txt",
+    "main.py", "app.py", "index.py", "__init__.py",
+    "pyproject.toml", "package.json", "requirements.txt",
+)
+
+
+def _fallback_root_files(inspection, max_n: int = 3):
+    """Selectionne jusqu'a max_n fichiers essentiels a la racine."""
+    root_files = []
+    for f in inspection.files:
+        p = f.path.replace("\\", "/")
+        if "/" in p:
+            continue
+        root_files.append(f)
+
+    def _rank(f):
+        name = f.path.lower()
+        if name in _ESSENTIAL_ROOT_PRIORITY:
+            return (0, _ESSENTIAL_ROOT_PRIORITY.index(name), name)
+        if name.endswith(".py"):
+            return (1, 0, name)
+        return (2, 0, name)
+
+    root_files.sort(key=_rank)
+    return root_files[:max_n]
+
+
 def _detect_technologies(inspection: InspectionResult) -> tuple[str, ...]:
     names = {Path(f.path).name for f in inspection.files}
     techs = sorted({tech for marker, tech in _TECH_MARKERS.items()
@@ -361,6 +389,49 @@ def _capabilities() -> tuple[str, ...]:
     """Capacités réellement disponibles (v1 : code_adapter)."""
     kinds = ",".join(sorted(code_adapter.ACCEPTED_KINDS))
     return (f"adapter=code_adapter", f"kinds={kinds}")
+
+
+def _normalize_path_for_match(p: str) -> str:
+    """Normalise un chemin pour comparaison : backslash -> slash, strip ./ , lowercase."""
+    s = (p or "").replace("\\", "/").strip().lower()
+    while s.startswith("./"):
+        s = s[2:]
+    return s
+
+
+def _extract_explicit_filenames(mission_text: str, all_paths: list) -> set:
+    """
+    Detecte les fichiers explicitement nommes dans la mission.
+    Match par nom complet OU par nom de base (ex: "sample.py" matche "src/sample.py").
+    Retourne l'ensemble des chemins canoniques (formes de all_paths).
+    """
+    if not mission_text or not all_paths:
+        return set()
+    text = mission_text.lower()
+
+    # Index : nom de base normalise -> liste de chemins canoniques
+    by_basename = {}
+    by_fullpath = {}
+    for p in all_paths:
+        norm = _normalize_path_for_match(p)
+        by_fullpath[norm] = p
+        base = norm.rsplit("/", 1)[-1]
+        by_basename.setdefault(base, []).append(p)
+
+    found = set()
+
+    # 1) Match sur nom complet (contient /)
+    for norm, canonical in by_fullpath.items():
+        if "/" in norm and norm in text:
+            found.add(canonical)
+
+    # 2) Match sur nom de base (ex: "sample.py")
+    for base, paths in by_basename.items():
+        if base in text:
+            for p in paths:
+                found.add(p)
+
+    return found
 
 
 def build_mission_context(
@@ -399,8 +470,17 @@ def build_mission_context(
     from mission_intent import analyze_mission
     struct_intent = analyze_mission(mission_text)   # 5.2 (déterministe)
 
+    # Filtre explicite : si la mission nomme un ou plusieurs fichiers du projet,
+    # on ne garde QUE ceux-la. Sinon, comportement complet inchange.
+    all_paths = [f.path for f in inspection.files]
+    explicit = _extract_explicit_filenames(mission_text, all_paths)
+    if explicit:
+        files_to_score = [f for f in inspection.files if f.path in explicit]
+    else:
+        files_to_score = inspection.files
+
     candidates: list[dict] = []
-    for f in inspection.files:
+    for f in files_to_score:
         base = _score_file(f.path, f.preview, terms)
         if base <= 0:
             continue
@@ -414,7 +494,20 @@ def build_mission_context(
                            "preview": f.preview, "role": role,
                            "base_score": base})
 
-    # Classement déterministe : score desc, puis chemin asc (tie-break stable).
+    # Fallback borne : si aucun fichier ne matche ET aucun nom explicite.
+    fallback_used = False
+    if not candidates and not explicit:
+        fallback_files = _fallback_root_files(inspection, max_n=3)
+        for f in fallback_files:
+            role = _detect_role(f.path)
+            candidates.append({
+                "path": f.path, "score": 0,
+                "preview": f.preview, "role": role,
+                "base_score": 0,
+            })
+        fallback_used = len(fallback_files) > 0
+
+    # Classement deterministe : score desc, puis chemin asc (tie-break stable).
     ranked = sorted(candidates, key=lambda c: (-c["score"], c["path"]))
 
     # BUDGET 5.3 explicite et fail-closed (appliqué APRÈS le classement).
