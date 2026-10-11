@@ -152,10 +152,14 @@ def _match_category(text: str, table: dict[str, tuple]) -> str:
     """
     Retourne la 1re catégorie (ordre du dict) dont un terme est présent
     dans le texte. UNKNOWN si aucune preuve lexicale. Déterministe.
+
+    FIX : match sur DÉBUT DE MOT (\b) au lieu de substring.
+    - "auth" matche "auth" et "authentification" (prefix) ✅
+    - "ui" ne matche PAS "puis", "issu", "suis" (sous-chaîne) ✅
     """
     for category, terms in table.items():
         for term in terms:
-            if term in text:
+            if re.search(r"\b" + re.escape(term), text):
                 return category
     return UNKNOWN
 
