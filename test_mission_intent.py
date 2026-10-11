@@ -66,6 +66,15 @@ def main() -> int:
     i = analyze_mission("analyse la documentation du projet et le cahier des charges")
     ok("doc_domaine", i.domaine == "DOC", i.domaine)
     ok("doc_objectif", i.objectif == "ANALYSER", i.objectif)
+    # ---- Audit authentification OAuth / Clerk ----
+    i = analyze_mission(
+        "Auditer l'authentification OAuth et l'intégration Clerk du projet"
+    )
+    ok("audit_objectif", i.objectif == "ANALYSER", i.objectif)
+    ok("audit_type", i.type_mission == "ANALYSE", i.type_mission)
+    ok("audit_domaine", i.domaine == "AUTH", i.domaine)
+    ok("audit_cible_clerk", "clerk" in i.cibles_probables,
+       str(i.cibles_probables))
 
     # ---- Ajout de feature ----
     print("\n[Feature]")

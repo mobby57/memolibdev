@@ -63,10 +63,15 @@ def make_lab():
 
 
 def approval():
-    return HumanApproval(approved=True, approver="moro",
-                         approved_at="2026-10-08T08:00:00+02:00",
-                         authority_level=AuthorityLevel.L3_PROPOSE.value)
-
+    import datetime
+    return HumanApproval(
+        approved=True,
+        approver="moro",
+        approved_at=datetime.datetime.now(
+            datetime.timezone.utc
+        ).isoformat(),
+        authority_level=AuthorityLevel.L3_PROPOSE.value,
+    )
 
 def action_for(rel):
     return ActionDossier("ACT", "PROPOSE_CODE_PATCH", rel, "MEDIUM", "REVERSIBLE_SANDBOX")
@@ -121,22 +126,77 @@ def main() -> int:
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
-    # ===== D : CORRIGER valide -> APPLIED (conservé) =====
+    # ===== D : CORRIGER valide -> APPLIED (binding réel) =====
     print("\n[D] CORRIGER (old présent) -> APPLIED")
     root, target = make_lab()
     try:
+        from coder_authorization import bind_approval
+
         tf = "src/version.ts"
+        mission_text = "corrige la version du module version"
+        injected = "REPLACE:version = '1.0':version = '2.0'"
+
         def verify_pass(r):
-            return ("version = '2.0'" in (r / tf).read_text(encoding="utf-8"), "ok")
-        res = run_from_mission(
-            "COR", "corrige la version du module version",
+            return (
+                "version = '2.0'" in (r / tf).read_text(encoding="utf-8"),
+                "ok",
+            )
+
+        # Étape 1 : obtenir une proposition réelle sans approbation.
+        probe = run_from_mission(
+            "COR", mission_text,
             target, None, verify_pass,
-            action=action_for(tf), human_approval=approval(),
-            provider=FakeProvider(scenario="happy",
-                                  injected_intent="REPLACE:version = '1.0':version = '2.0'"))
-        ok("D_APPLIED", res.report.final_state == "APPLIED", res.report.reason[:50])
-        ok("D_not_committed",
-           res.report.committed is False and res.report.pushed is False, "")
+            action=action_for(tf),
+            human_approval=None,
+            provider=FakeProvider(
+                scenario="happy",
+                injected_intent=injected,
+            ),
+        )
+
+        proposal = probe.report.proposal
+        ok(
+            "D_PROPOSAL",
+            probe.report.final_state == "AWAIT_HUMAN"
+            and proposal is not None,
+            probe.report.final_state,
+        )
+
+        if proposal is None:
+            # Échec fermé : aucune approbation ni application possible.
+            ok("D_APPLIED", False, "aucune proposition réelle")
+            ok(
+                "D_not_committed",
+                probe.report.committed is False
+                and probe.report.pushed is False,
+                "probe sans approbation",
+            )
+        else:
+            # Étape 2 : lier l'approbation à la proposition exacte.
+            bound = bind_approval(approval(), proposal)
+
+            res = run_from_mission(
+                "COR", mission_text,
+                target, None, verify_pass,
+                action=action_for(tf),
+                human_approval=bound,
+                provider=FakeProvider(
+                    scenario="happy",
+                    injected_intent=injected,
+                ),
+            )
+
+            ok(
+                "D_APPLIED",
+                res.report.final_state == "APPLIED",
+                res.report.reason[:120],
+            )
+            ok(
+                "D_not_committed",
+                res.report.committed is False
+                and res.report.pushed is False,
+                "",
+            )
     finally:
         shutil.rmtree(root, ignore_errors=True)
 
