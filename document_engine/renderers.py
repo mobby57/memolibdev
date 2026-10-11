@@ -1,4 +1,9 @@
-"""Rendus purs, déterministes et sans écriture du rapport technique."""
+"""Rendus purs, déterministes et sans écriture du rapport technique.
+
+Les valeurs rendues sont une représentation normalisée (NFC, fins de ligne
+unifiées) et échappée (antislash doublé, retours à la ligne en ``\\n``, caractères
+Markdown ou séparateur échappés) : ce ne sont pas les octets d'origine des preuves.
+"""
 from __future__ import annotations
 
 import html
@@ -22,6 +27,36 @@ def _normalized_text(value: object) -> str:
     )
 
 
+_ALWAYS_ESCAPED_CATEGORIES = frozenset({"Cc", "Cf", "Cs", "Co", "Zl", "Zp"})
+# Liste explicite, indépendante de la version d'unicodedata.
+_ALWAYS_ESCAPED_RANGES = (
+    (0x0000, 0x001F), (0x007F, 0x009F), (0x00AD, 0x00AD),
+    (0x061C, 0x061C), (0x180E, 0x180E), (0x200B, 0x200F),
+    (0x2028, 0x202E), (0x2060, 0x206F), (0xD800, 0xDFFF),
+    (0xE000, 0xF8FF), (0xFEFF, 0xFEFF), (0xFFF9, 0xFFFB),
+)
+
+
+def _must_escape(character: str) -> bool:
+    code = ord(character)
+    if any(low <= code <= high for low, high in _ALWAYS_ESCAPED_RANGES):
+        return True
+    return unicodedata.category(character) in _ALWAYS_ESCAPED_CATEGORIES
+
+
+def _escape_unsafe(text: str) -> str:
+    """Remplace les caractères de contrôle/format par \\uXXXX ou \\UXXXXXXXX.
+
+    Le saut de ligne est traité avant (devenu ``\\n``) ; l'antislash est déjà
+    doublé, donc un ``\\u2028`` saisi littéralement reste distinct d'un vrai U+2028.
+    """
+    return "".join(
+        (f"\\u{ord(c):04x}" if ord(c) <= 0xFFFF else f"\\U{ord(c):08x}")
+        if c != "\n" and _must_escape(c) else c
+        for c in text
+    )
+
+
 def _flat_text(value: object, *, markdown: bool = False) -> str:
     text = _normalized_text(value).replace("\\", "\\\\")
     if markdown:
@@ -29,7 +64,7 @@ def _flat_text(value: object, *, markdown: bool = False) -> str:
             text = text.replace(character, f"\\{character}")
     else:
         text = text.replace("|", "\\|")
-    return text.replace("\n", "\\n")
+    return _escape_unsafe(text.replace("\n", "\\n"))
 
 
 def render_markdown(report: TechnicalReport, template: TemplateDefinition) -> str:

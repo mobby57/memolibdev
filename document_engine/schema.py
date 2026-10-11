@@ -31,6 +31,11 @@ DECISION_STATUSES = frozenset({"APPROVED", "REJECTED"})
 OUTPUT_FORMATS = frozenset({"md", "html", "txt"})
 
 
+def _freeze(value):
+    """Fige listes et tuples ; toute autre valeur est laissée au validateur."""
+    return tuple(value) if isinstance(value, (list, tuple)) else value
+
+
 @dataclass(frozen=True)
 class EvidenceRef:
     ref_id: str
@@ -50,8 +55,8 @@ class TestResult:
     detail: str = ""
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "command", tuple(self.command))
-        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
+        object.__setattr__(self, "command", _freeze(self.command))
+        object.__setattr__(self, "evidence_refs", _freeze(self.evidence_refs))
 
 
 @dataclass(frozen=True)
@@ -81,8 +86,8 @@ class TemplateDefinition:
     template_sha256: str
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "required_sections", tuple(self.required_sections))
-        object.__setattr__(self, "supported_formats", tuple(self.supported_formats))
+        object.__setattr__(self, "required_sections", _freeze(self.required_sections))
+        object.__setattr__(self, "supported_formats", _freeze(self.supported_formats))
 
 
 @dataclass(frozen=True)
@@ -102,9 +107,9 @@ class TechnicalReport:
     human_approval: str
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
-        object.__setattr__(self, "tests", tuple(self.tests))
-        object.__setattr__(self, "decisions", tuple(self.decisions))
+        object.__setattr__(self, "evidence_refs", _freeze(self.evidence_refs))
+        object.__setattr__(self, "tests", _freeze(self.tests))
+        object.__setattr__(self, "decisions", _freeze(self.decisions))
 
 
 @dataclass(frozen=True)

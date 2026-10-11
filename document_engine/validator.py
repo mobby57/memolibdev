@@ -8,17 +8,125 @@ from .schema import (
     DECISION_STATUSES,
     ENGINE_VERSION,
     HUMAN_APPROVAL_STATUSES,
+    OUTPUT_FORMATS,
+    REPORT_SCHEMA_VERSION,
     TEST_STATUSES,
     VALIDATION_STATUSES,
     DocumentValidationResult,
+    EvidenceRef,
+    HumanDecision,
+    ProjectRef,
     TechnicalReport,
     TemplateDefinition,
+    TestResult,
 )
 
 
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _GIT_SHA_RE = re.compile(r"^[0-9a-f]{7,64}$")
+_V1_SECTIONS = ("metadata", "evidence", "tests", "decisions")
+
+
+def _is_str(value: object) -> bool:
+    return isinstance(value, str)
+
+
+def _is_opt_str(value: object) -> bool:
+    return value is None or isinstance(value, str)
+
+
+def _is_str_tuple(value: object) -> bool:
+    return isinstance(value, tuple) and all(isinstance(item, str) for item in value)
+
+
+def _is_opt_int(value: object) -> bool:
+    return value is None or (isinstance(value, int) and not isinstance(value, bool))
+
+
+def _type_errors(report: object, template: object) -> list[str]:
+    """Contrôle structurel : aucune comparaison ni regex avant ce passage."""
+    errors: list[str] = []
+    if not isinstance(template, TemplateDefinition):
+        return ["modele de type invalide"]
+    if not isinstance(report, TechnicalReport):
+        return ["rapport de type invalide"]
+
+    for name in (
+        "report_id", "mission_id", "generated_at", "template_id",
+        "template_version", "template_sha256", "engine_version",
+        "validation_status", "human_approval",
+    ):
+        if not _is_str(getattr(report, name)):
+            errors.append(f"type invalide: {name}")
+    for name in ("template_id", "version", "schema_version", "template_sha256"):
+        if not _is_str(getattr(template, name)):
+            errors.append(f"type invalide: modele.{name}")
+    for name in ("required_sections", "supported_formats"):
+        if not _is_str_tuple(getattr(template, name)):
+            errors.append(f"type invalide: modele.{name}")
+
+    project = report.project
+    if not isinstance(project, ProjectRef):
+        errors.append("type invalide: project")
+    else:
+        if not _is_str(project.project_id):
+            errors.append("type invalide: project_id")
+        if not _is_opt_str(project.commit_sha):
+            errors.append("type invalide: commit_sha")
+        if not _is_opt_str(project.target_fingerprint):
+            errors.append("type invalide: target_fingerprint")
+
+    collections = (
+        ("evidence_refs", report.evidence_refs, EvidenceRef),
+        ("tests", report.tests, TestResult),
+        ("decisions", report.decisions, HumanDecision),
+    )
+    for label, items, expected in collections:
+        if not isinstance(items, tuple):
+            errors.append(f"type invalide: {label}")
+            continue
+        for item in items:
+            if not isinstance(item, expected):
+                errors.append(f"element invalide dans {label}")
+                continue
+            if expected is EvidenceRef and not (
+                _is_str(item.ref_id) and _is_str(item.kind)
+                and _is_str(item.source_ref) and _is_str(item.sha256)
+                and _is_opt_str(item.captured_at)
+            ):
+                errors.append("type invalide: evidence")
+            if expected is TestResult and not (
+                _is_str(item.name) and _is_str(item.status)
+                and _is_str_tuple(item.command)
+                and _is_str_tuple(item.evidence_refs)
+                and _is_opt_int(item.returncode) and _is_str(item.detail)
+            ):
+                errors.append("type invalide: test")
+            if expected is HumanDecision and not (
+                _is_str(item.decision_id) and _is_str(item.status)
+                and _is_str(item.approver) and _is_str(item.decided_at)
+                and _is_opt_str(item.evidence_ref) and _is_str(item.purpose)
+            ):
+                errors.append("type invalide: decision")
+    return errors
+
+
+def _template_errors(template: TemplateDefinition) -> list[str]:
+    """Vérifie la définition effective du modèle, pas seulement son empreinte."""
+    errors: list[str] = []
+    if template.schema_version != REPORT_SCHEMA_VERSION:
+        errors.append("schema de modele incompatible")
+    if template.required_sections != _V1_SECTIONS:
+        errors.append("sections requises du modele incompatibles")
+    formats = template.supported_formats
+    if (
+        not formats
+        or not set(formats) <= OUTPUT_FORMATS
+        or len(formats) != len(set(formats))
+    ):
+        errors.append("formats du modele invalides")
+    return errors
 
 
 def _canonical_timestamp(value: str) -> bool:
@@ -40,7 +148,10 @@ def validate_report(
     template: TemplateDefinition,
 ) -> DocumentValidationResult:
     """Vérifie le contrat sans créer, interpréter ou chercher de preuve."""
-    errors: list[str] = []
+    errors: list[str] = _type_errors(report, template)
+    if errors:
+        return DocumentValidationResult(ok=False, errors=tuple(errors))
+    errors.extend(_template_errors(template))
 
     if not _IDENTIFIER_RE.fullmatch(report.report_id):
         errors.append("report_id invalide")
@@ -145,6 +256,9 @@ def validate_report(
         if decision.evidence_ref is not None and decision.evidence_ref not in evidence_by_id:
             errors.append(f"preuve de decision inconnue: {decision.decision_id}")
 
+    delivery_statuses = {decision.status for decision in delivery_decisions}
+    if {"APPROVED", "REJECTED"} <= delivery_statuses:
+        errors.append("decisions de livraison contradictoires: APPROVED et REJECTED")
     if report.human_approval == "APPROVED" and not any(
         decision.status == "APPROVED" for decision in delivery_decisions
     ):

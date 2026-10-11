@@ -72,3 +72,9 @@ v354_g_campaign/
 build/
 dist/
 *.spec
+
+*.v1.bak
+*.v2.bak
+*.v3.bak
+*.v4.bak
+*.v5.bak
