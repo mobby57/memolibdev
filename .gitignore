@@ -80,3 +80,5 @@ dist/
 *.v5.bak
 _legacy_document_engine/
 __pycache__/
+diagnostic_context_builder.txt
+*.before-*
