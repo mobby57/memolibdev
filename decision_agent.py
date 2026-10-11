@@ -13,12 +13,52 @@ from project_target import resolve_target, ProjectTargetError
 
 V3 = Path(__file__).resolve().parent
 
-try:
-    TARGET = resolve_target()
-    MEMOLIB = TARGET.path
-except ProjectTargetError as exc:
-    print(f"[TARGET][ERROR] {exc}", file=sys.stderr)
-    sys.exit(2)
+# --- Cible projet : resolution LAZY (evite sys.exit au module-level) ---
+# Sans MEMOLIBDEV_TARGET, l'import reste possible ; l'erreur ne survient
+# qu'a la premiere utilisation reelle de TARGET ou MEMOLIB (fail-closed).
+_TARGET_CACHE = None
+
+
+def _ensure_target():
+    global _TARGET_CACHE
+    if _TARGET_CACHE is not None:
+        return _TARGET_CACHE
+    try:
+        _TARGET_CACHE = resolve_target()
+    except ProjectTargetError as exc:
+        print(f"[TARGET][ERROR] {exc}", file=sys.stderr)
+        raise RuntimeError(str(exc)) from exc
+    return _TARGET_CACHE
+
+
+class _TargetProxy:
+    """Resout le target au premier acces (lazy)."""
+    def __getattr__(self, name):
+        return getattr(_ensure_target(), name)
+    def __repr__(self):
+        return f"<TargetProxy resolved={_TARGET_CACHE is not None}>"
+
+
+class _MemolibProxy:
+    """Resout MEMOLIB (TARGET.path) au premier acces (lazy)."""
+    def _p(self):
+        return _ensure_target().path
+    def __truediv__(self, other):
+        return self._p() / other
+    def __rtruediv__(self, other):
+        return other / self._p()
+    def __fspath__(self):
+        return str(self._p())
+    def __getattr__(self, name):
+        return getattr(self._p(), name)
+    def __str__(self):
+        return str(self._p())
+    def __repr__(self):
+        return "<MemolibProxy>"
+
+
+TARGET = _TargetProxy()
+MEMOLIB = _MemolibProxy()
 
 REPORTS = V3 / "reports"
 

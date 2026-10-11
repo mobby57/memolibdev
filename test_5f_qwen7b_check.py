@@ -4,6 +4,16 @@ import json
 import urllib.request
 import time
 
+import pytest
+from ollama_helpers import ollama_available, ollama_has_model
+
+pytestmark = pytest.mark.skipif(
+    not ollama_available(),
+    reason="Ollama non disponible (lancer 'ollama serve')"
+)
+
+
+
 REQUEST = """Vérifier la configuration OAuth Clerk de MemoLib.
 Identifier les fichiers réellement pertinents, les preuves disponibles,
 les éventuelles incohérences et les tests nécessaires.

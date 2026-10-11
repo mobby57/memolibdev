@@ -464,6 +464,16 @@ dis-le explicitement.
 Ne fabrique aucun fichier, chemin ou configuration.
 """
 
+import pytest
+from ollama_helpers import ollama_available, ollama_has_model
+
+pytestmark = pytest.mark.skipif(
+    not ollama_available(),
+    reason="Ollama non disponible (lancer 'ollama serve')"
+)
+
+
+
     return prompt
 
 
