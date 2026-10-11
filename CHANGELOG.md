@@ -143,3 +143,21 @@
 
 \- Preuve locale uniquement (pas de CI isolée)
 
+
+## [V3.5.5-D] - 2026-10-11
+
+### Prouve en reel
+- **Rollback automatique valide end-to-end** avec un vrai LLM (Ollama)
+- Flux SUPERVISED_APPLY en 3 phases : PROPOSER -> LIAISON -> APPLIQUER
+- Approbation liee au SHA du diff : `expected_diff_sha256` verifie
+- Echec de `verify` apres apply -> `ROLLED_BACK` automatique
+- **SHA-256 du fichier identique avant/apres** : `cc118a2e...`
+- Aucune ecriture residuelle : etat initial restaure
+
+### Ajoute
+- `test_rollback_reel.py` : test end-to-end du rollback en conditions reelles
+
+### Signification
+- Le coeur du systeme est valide : apply + verify + rollback automatique
+- Le binding cryptographique empeche l'application sans approbation liee
+- Le fail-closed a bloque une tentative d'apply sans approbation correcte
