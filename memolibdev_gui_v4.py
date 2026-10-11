@@ -6,10 +6,13 @@ Cherche memolibdev_cli.py a cote de lui.
 Verifie Ollama au demarrage.
 """
 import os
+import queue
 import subprocess
 import sys
 import threading
+import time
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -48,24 +51,119 @@ def find_cli_executable():
     return None
 
 
-def find_cli_executable():
-    """Trouve MemoLibDev-cli.exe.
-    Cherche a cote de l'exe (sys.executable), puis dans _MEIPASS, puis a cote du script."""
-    candidates = []
-    if getattr(sys, "frozen", False):
-        # A cote du .exe (cas normal : les deux .exe dans le meme dossier)
-        candidates.append(Path(sys.executable).parent / "MemoLibDev-cli.exe")
-    if hasattr(sys, "_MEIPASS"):
-        candidates.append(Path(sys._MEIPASS) / "MemoLibDev-cli.exe")
-    candidates.append(Path(__file__).parent / "MemoLibDev-cli.exe")
-    candidates.append(BASE_DIR / "MemoLibDev-cli.exe")
-
-    for c in candidates:
-        if c.is_file():
-            return c
-    return None
 DEFAULT_MODEL = "memolibdev-qwen7b-16k:latest"
 OLLAMA_URL = "http://localhost:11434"
+CLI_TIMEOUT_SECONDS = 600
+PROCESS_STOP_GRACE_SECONDS = 5
+
+
+@dataclass(frozen=True)
+class ProcessOutput:
+    lines: list[str]
+    timed_out: bool
+    termination_confirmed: bool
+    reader_error: str | None
+    returncode: int | None
+
+
+def _stop_process_tree(proc: subprocess.Popen) -> bool:
+    """Arrête la CLI et ses descendants, jamais le service Ollama externe."""
+    if proc.poll() is not None:
+        return True
+
+    try:
+        if os.name == "nt":
+            result = subprocess.run(
+                ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=PROCESS_STOP_GRACE_SECONDS,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+            if result.returncode != 0:
+                proc.kill()
+        else:
+            proc.terminate()
+        proc.wait(timeout=PROCESS_STOP_GRACE_SECONDS)
+        return True
+    except (OSError, subprocess.SubprocessError):
+        try:
+            proc.kill()
+            proc.wait(timeout=PROCESS_STOP_GRACE_SECONDS)
+            return True
+        except (OSError, subprocess.SubprocessError):
+            return proc.poll() is not None
+
+
+def _decode_cli_line(raw: bytes) -> str:
+    try:
+        return raw.decode("utf-8").rstrip("\r\n")
+    except UnicodeDecodeError:
+        return raw.decode("cp1252", errors="replace").rstrip("\r\n")
+
+
+def _collect_process_output(
+    proc: subprocess.Popen,
+    timeout_seconds: float,
+) -> ProcessOutput:
+    """Lit stdout sans laisser une sortie silencieuse contourner le timeout."""
+    output: queue.Queue[tuple[str, str | None]] = queue.Queue()
+    lines: list[str] = []
+    reader_error: str | None = None
+    stdout_closed = False
+
+    def read_stdout() -> None:
+        try:
+            if proc.stdout is None:
+                output.put(("reader_error", "stdout indisponible"))
+                return
+            for raw in iter(proc.stdout.readline, b""):
+                output.put(("line", _decode_cli_line(raw)))
+        except (OSError, ValueError) as exc:
+            output.put(("reader_error", str(exc)))
+        finally:
+            output.put(("eof", None))
+
+    reader = threading.Thread(target=read_stdout, daemon=True)
+    reader.start()
+    deadline = time.monotonic() + timeout_seconds
+    timed_out = False
+    termination_confirmed = True
+
+    try:
+        while proc.poll() is None or not stdout_closed:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                timed_out = True
+                termination_confirmed = _stop_process_tree(proc)
+                break
+            try:
+                kind, payload = output.get(timeout=min(0.2, remaining))
+            except queue.Empty:
+                continue
+            if kind == "line" and payload:
+                lines.append(payload)
+            elif kind == "reader_error":
+                reader_error = payload
+            elif kind == "eof":
+                stdout_closed = True
+    finally:
+        if proc.poll() is None:
+            termination_confirmed = _stop_process_tree(proc)
+        if proc.stdout is not None:
+            try:
+                proc.stdout.close()
+            except (OSError, ValueError):
+                pass
+        reader.join(timeout=PROCESS_STOP_GRACE_SECONDS)
+
+    return ProcessOutput(
+        lines=lines,
+        timed_out=timed_out,
+        termination_confirmed=termination_confirmed,
+        reader_error=reader_error,
+        returncode=proc.poll(),
+    )
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -118,9 +216,51 @@ class MemoLibDevApp(ctk.CTk):
         self.model_var = ctk.StringVar(value=DEFAULT_MODEL)
         self.busy = False
         self.messages = []  # historique pour export
+        self._closing = False
+        self._ui_events: queue.Queue[tuple[object, tuple]] = queue.Queue()
+        self._process_lock = threading.Lock()
+        self._active_process: subprocess.Popen | None = None
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self._build_ui()
         self.after(100, self._check_env)
+        self.after(50, self._drain_ui_events)
+
+    def _post_ui(self, callback, *args) -> None:
+        if not self._closing:
+            self._ui_events.put((callback, args))
+
+    def _drain_ui_events(self) -> None:
+        if self._closing:
+            return
+        while True:
+            try:
+                callback, args = self._ui_events.get_nowait()
+            except queue.Empty:
+                break
+            try:
+                callback(*args)
+            except tk.TclError:
+                return
+        if not self._closing:
+            try:
+                self.after(50, self._drain_ui_events)
+            except tk.TclError:
+                pass
+
+    def _on_close(self) -> None:
+        if self._closing:
+            return
+        self._closing = True
+        with self._process_lock:
+            proc = self._active_process
+        if proc is not None and proc.poll() is None:
+            threading.Thread(
+                target=_stop_process_tree,
+                args=(proc,),
+                daemon=False,
+            ).start()
+        self.destroy()
 
     def _build_ui(self):
         self.grid_columnconfigure(0, weight=1)
@@ -312,6 +452,8 @@ class MemoLibDevApp(ctk.CTk):
         self.status.configure(text="En cours...")
 
         def worker():
+            proc = None
+            completion_status = "Pret."
             # Trouver le CLI : MemoLibDev-cli.exe a cote, sinon memolibdev_cli.py
             cli_exe = find_cli_executable()
             cli_py = BASE_DIR / "memolibdev_cli.py"
@@ -322,16 +464,19 @@ class MemoLibDevApp(ctk.CTk):
 
             if cli_exe is not None:
                 cmd = [str(cli_exe)]
-                self.after(0, self._system, f"CLI : {cli_exe}")
+                self._post_ui(self._system, f"CLI : {cli_exe}")
             elif cli_py.is_file():
                 cmd = [sys.executable, str(cli_py)]
-                self.after(0, self._system, f"CLI (python) : {cli_py}")
+                self._post_ui(self._system, f"CLI (python) : {cli_py}")
             else:
-                self.after(0, self._assistant,
-                           f"CLI introuvable. Cherche dans :\n"
-                           f"  {Path(sys.executable).parent}\n"
-                           f"  {BASE_DIR}")
-                self.after(0, self._done)
+                completion_status = "Erreur : CLI introuvable."
+                self._post_ui(
+                    self._assistant,
+                    f"CLI introuvable. Cherche dans :\n"
+                    f"  {Path(sys.executable).parent}\n"
+                    f"  {BASE_DIR}",
+                )
+                self._post_ui(self._done, completion_status)
                 return
 
             # Detecter automatiquement le mode selon la mission
@@ -347,7 +492,7 @@ class MemoLibDevApp(ctk.CTk):
             else:
                 mode = "PROPOSE"
 
-            self.after(0, self._system, f"Mode : {mode}")
+            self._post_ui(self._system, f"Mode : {mode}")
 
             cmd += [
                 "--mission", mission,
@@ -356,8 +501,12 @@ class MemoLibDevApp(ctk.CTk):
                 "--timeout", "300",
             ]
 
-            buf_lines = []
             try:
+                creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                if os.name == "nt":
+                    creationflags |= getattr(
+                        subprocess, "CREATE_NEW_PROCESS_GROUP", 0
+                    )
                 proc = subprocess.Popen(
                     cmd,
                     cwd=str(BASE_DIR),
@@ -365,28 +514,55 @@ class MemoLibDevApp(ctk.CTk):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     stdin=subprocess.DEVNULL,
-                    # Pas de text=True : on lit en bytes et decode nous-memes
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0,
+                    creationflags=creationflags,
                 )
-                # Lire par bytes bruts (pas de text=True), decoder en UTF-8 avec fallback cp1252
-                buf_lines = []
-                for raw in iter(proc.stdout.readline, b""):
-                    try:
-                        line = raw.decode("utf-8").rstrip("\r\n")
-                    except UnicodeDecodeError:
-                        line = raw.decode("cp1252", errors="replace").rstrip("\r\n")
-                    if line:
-                        buf_lines.append(line)
-                proc.wait(timeout=600)
+                with self._process_lock:
+                    self._active_process = proc
 
-                # Afficher TOUT en une seule bulle (evite le hachage ligne par ligne)
-                if buf_lines:
-                    full = "\n".join(buf_lines)
-                    self.after(0, self._assistant, full)
-            except Exception as e:
-                self.after(0, self._assistant, f"Erreur : {type(e).__name__}: {e}")
+                output = _collect_process_output(proc, CLI_TIMEOUT_SECONDS)
+                if output.lines:
+                    self._post_ui(self._assistant, "\n".join(output.lines))
+                if output.reader_error:
+                    self._post_ui(
+                        self._assistant,
+                        f"Lecture CLI : {output.reader_error}",
+                    )
+                if output.timed_out:
+                    completion_status = "Timeout : CLI arretee."
+                    message = (
+                        "Delai global depasse. La CLI et ses processus "
+                        "enfants ont ete arretes."
+                    )
+                    if not output.termination_confirmed:
+                        message = (
+                            "Delai global depasse ; arret du processus "
+                            "non confirme."
+                        )
+                    self._post_ui(self._assistant, message)
+                elif output.returncode:
+                    completion_status = (
+                        f"CLI terminee avec le code {output.returncode}."
+                    )
+                    self._post_ui(self._assistant, completion_status)
+            except OSError as exc:
+                completion_status = "Erreur de lancement CLI."
+                self._post_ui(
+                    self._assistant,
+                    f"Erreur de lancement : {type(exc).__name__}: {exc}",
+                )
+            except Exception as exc:
+                completion_status = "Erreur inattendue de supervision."
+                self._post_ui(
+                    self._assistant,
+                    f"Erreur : {type(exc).__name__}: {exc}",
+                )
             finally:
-                self.after(0, self._done)
+                if proc is not None and proc.poll() is None:
+                    _stop_process_tree(proc)
+                with self._process_lock:
+                    if self._active_process is proc:
+                        self._active_process = None
+                self._post_ui(self._done, completion_status)
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -398,10 +574,10 @@ class MemoLibDevApp(ctk.CTk):
             if line.strip():
                 self._assistant(line)
 
-    def _done(self):
+    def _done(self, status_text="Pret."):
         self.busy = False
         self.send_btn.configure(state="normal")
-        self.status.configure(text="Pret.")
+        self.status.configure(text=status_text)
 
 
 def main():

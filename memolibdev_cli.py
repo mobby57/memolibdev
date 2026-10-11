@@ -164,10 +164,13 @@ def run_cli(
     #    toute écriture. En plus, en READ_ONLY/PROPOSE on ne fournit
     #    jamais d'action/approval.
     if mode in ("READ_ONLY", "PROPOSE"):
+        # READ_ONLY : analyse pure via context (pas de planner LLM).
+        # PROPOSE   : planner LLM -> REPLACE -> diff propose.
+        _provider_for_run = None if mode == "READ_ONLY" else provider
         res = run_from_mission(
             f"CLI-{mode}", mission, target, None, verify,
             action=None, human_approval=None,     # <= pas d'apply possible
-            provider=provider, provider_timeout_s=provider_timeout_s,
+            provider=_provider_for_run, provider_timeout_s=provider_timeout_s,
         )
         rep = res.report
 

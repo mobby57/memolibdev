@@ -18,6 +18,7 @@ Aucun vrai Ollama (FakeProvider déterministe). Aucun vrai stdin
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 import hashlib
 import shutil
@@ -117,6 +118,30 @@ def main() -> int:
         shutil.rmtree(root, ignore_errors=True)
 
     # ========================================================
+    # C1b — READ_ONLY analyse sans planner ni proposition de diff
+    # ========================================================
+    print("\n[C1b] READ_ONLY -> ANALYZED, sans proposition")
+    root, target = make_lab()
+    try:
+        tf = "src/version.ts"
+        sha_before = (root / tf).read_bytes()
+        status_before = git(root, "status", "--porcelain")
+        res = cli.run_cli(
+            mission="Analyse le fichier src/version.ts et explique sa fonction",
+            target=target, mode="READ_ONLY", model="fake", approver=None,
+            provider=FakeProvider(scenario="happy"),
+            verify=verify_pass_factory(tf),
+            input_fn=never_input, approval_fn=never_approve,
+            provider_timeout_s=None)
+        ok("C1b_analyzed", res.status == "ANALYZED", f"status={res.status}")
+        ok("C1b_no_proposal", res.report is not None and res.report.proposal is None, "")
+        ok("C1b_file_unchanged", (root / tf).read_bytes() == sha_before, "")
+        ok("C1b_working_tree_unchanged",
+           git(root, "status", "--porcelain") == status_before, "")
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+    # ========================================================
     # C2 + C6 — mission ambiguë/courte -> QUESTION
     # ========================================================
     print("\n[C2+C6] Mission ambiguë -> QUESTION")
@@ -209,7 +234,7 @@ def main() -> int:
             # Approbation EXPLICITE simulant une vraie saisie humaine.
             return HumanApproval(
                 approved=True, approver="moro",
-                approved_at="2026-10-07T00:00:00+02:00",
+                approved_at=datetime.now(timezone.utc).isoformat(),
                 authority_level=AuthorityLevel.L3_PROPOSE.value)
 
         res = cli.run_cli(
