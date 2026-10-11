@@ -1,0 +1,30 @@
+[
+  {
+    "script": "api_facade_check.py",
+    "kind": "CI",
+    "status": "OK",
+    "code": 0,
+    "pass": 71,
+    "fail": 0
+  },
+  {
+    "script": "d54_adversarial_check.py",
+    "kind": "ONESHOT",
+    "status": "SKIP"
+  },
+  {
+    "script": "test_5f_qwen7b_check.py",
+    "kind": "ONESHOT",
+    "status": "SKIP"
+  },
+  {
+    "script": "test_5g1_integration_v4_check.py",
+    "kind": "ONESHOT",
+    "status": "SKIP"
+  },
+  {
+    "script": "test_5g1_integration_v5_check.py",
+    "kind": "ONESHOT",
+    "status": "SKIP"
+  }
+]
