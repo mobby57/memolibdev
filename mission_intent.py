@@ -62,10 +62,10 @@ _OBJECTIFS = {
 
 # DOMAINE : zone fonctionnelle concernée.
 _DOMAINES = {
-    "AUTH":     ("auth", "authentification", "authentication", "login",
+    "AUTH":     ("auth*", "authentification", "authentication", "login",
                  "connexion", "connecter", "session", "clerk", "oauth",
                  "token", "jwt", "mot de passe", "password", "signin"),
-    "ROUTES":   ("route", "routes", "api", "endpoint", "endpoints",
+    "ROUTES":   ("route*", "routes", "api", "endpoint", "endpoints",
                  "middleware", "proxy", "navigation", "redirection", "url"),
     "UI":       ("ui", "interface", "composant", "component", "page", "écran",
                  "ecran", "affichage", "css", "style", "bouton", "formulaire",
@@ -76,7 +76,7 @@ _DOMAINES = {
     "CONFIG":   ("config", "configuration", "variable", "variables",
                  "environnement", "env", "tsconfig", "package.json",
                  "next.config", "paramètre", "parametre", "réglage"),
-    "TESTS":    ("test", "tests", "couverture", "coverage", "scénario",
+    "TESTS":    ("test*", "tests", "couverture", "coverage", "scénario",
                  "scenario", "spec", "mock", "jest", "vitest"),
     "DOC":      ("documentation", "doc", "docs", "readme", "cahier",
                  "charges", "guide", "manuel", "règle", "regle", "rules"),
@@ -104,19 +104,19 @@ _TYPES = {
 # Mots -> indices de cibles probables (hints lexicaux, PAS des fichiers réels).
 _CIBLE_HINTS = {
     "proxy": "proxy", "middleware": "middleware", "login": "login",
-    "auth": "auth", "route": "route", "routes": "routes", "api": "api",
+    "auth*": "auth*", "route*": "route*", "routes": "routes", "api": "api",
     "composant": "composant", "component": "component", "page": "page",
     "prisma": "prisma", "schema": "schema", "config": "config",
-    "test": "test", "tests": "tests", "session": "session", "token": "token",
+    "test*": "test*", "tests": "tests", "session": "session", "token": "token",
     "clerk": "clerk", "navigation": "navigation", "ui": "ui",
 }
 
 # Facteurs de risque lexicaux (élèvent le niveau).
-_RISK_HIGH_TERMS = ("auth", "authentification", "sécurité", "securite",
+_RISK_HIGH_TERMS = ("auth*", "authentification", "sécurité", "securite",
                     "security", "token", "session", "production", "prod",
                     "paiement", "payment", "secret", "credential", "migration",
                     "supprime", "supprimer", "delete", "drop")
-_RISK_MEDIUM_TERMS = ("api", "route", "routes", "data", "prisma", "schema",
+_RISK_MEDIUM_TERMS = ("api", "route*", "routes", "data", "prisma", "schema",
                       "config", "middleware", "proxy")
 
 _WORD_RE = re.compile(r"[A-Za-zÀ-ÿ_][A-Za-zÀ-ÿ0-9_]*", re.UNICODE)
@@ -148,18 +148,25 @@ def _normalize(text: str) -> str:
     return (text or "").lower().strip()
 
 
+def _term_pattern(term: str) -> str:
+    """Mot entier par defaut, prefixe si le terme finit par '*'."""
+    if term.endswith("*"):
+        return r"\b" + re.escape(term[:-1])
+    return r"\b" + re.escape(term) + r"\b"
+
+
 def _match_category(text: str, table: dict[str, tuple]) -> str:
     """
     Retourne la 1re catégorie (ordre du dict) dont un terme est présent
     dans le texte. UNKNOWN si aucune preuve lexicale. Déterministe.
 
     FIX : match sur DÉBUT DE MOT (\b) au lieu de substring.
-    - "auth" matche "auth" et "authentification" (prefix) ✅
+    - "auth*" matche "auth*" et "authentification" (prefix) ✅
     - "ui" ne matche PAS "puis", "issu", "suis" (sous-chaîne) ✅
     """
     for category, terms in table.items():
         for term in terms:
-            if re.search(r"\b" + re.escape(term), text):
+            if re.search(_term_pattern(term), text, flags=re.IGNORECASE):
                 return category
     return UNKNOWN
 
