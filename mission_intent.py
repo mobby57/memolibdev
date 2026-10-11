@@ -43,7 +43,7 @@ UNKNOWN = "UNKNOWN"
 _OBJECTIFS = {
     "CORRIGER": ("corrige", "corriger", "répare", "repare", "réparer", "fix",
                  "résous", "resous", "résoudre", "debug", "déboguer"),
-    "ANALYSER": ("analyse", "analyser", "comprends", "comprendre", "explique",
+    "ANALYSER": ("analyse", "analyser", "genere", "génère", "fais", "evalue", "évalue", "evaluer", "évaluer", "audite", "comprends", "comprendre", "explique",
                  "expliquer", "identifie", "identifier", "diagnostique",
                  "diagnostic", "inspecte", "inspecter", "examine", "vérifie",
                  "verifier", "audit", "decris", "décris", "decrire", "décrire",

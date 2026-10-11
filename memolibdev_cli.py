@@ -139,6 +139,21 @@ def run_cli(
     if mode not in MODES:
         return CliResult("ERROR", f"mode inconnu: {mode}")
 
+    # 0. Aiguillage : mission de type "document" -> rediriger vers le GUI docs
+    import re as _re
+    _mission_low = mission.lower()
+    _doc_keywords = ("rapport", "facture", "devis", "attestation",
+                     "compte rendu", "compte-rendu", "powerpoint", "ppt",
+                     "excel", "xlsx", "document word", "docx")
+    _doc_hits = [k for k in _doc_keywords if k in _mission_low]
+    if _doc_hits:
+        return CliResult(
+            "WRONG_TOOL",
+            f"[WRONG_TOOL] Cette mission demande un document ({', '.join(_doc_hits)}). "
+            f"Utilisez plutot memolibdev_doc_gui.py ou create_doc.py --type <facture|devis|...>. "
+            f"Le CLI est reserve a l'analyse et la modification de code.",
+        )
+
     # 1. Clarification (fail-closed : on ne devine pas).
     question = _needs_clarification(mission, target)
     if question is not None:
