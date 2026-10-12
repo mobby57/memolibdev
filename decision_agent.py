@@ -62,7 +62,7 @@ MEMOLIB = _MemolibProxy()
 
 REPORTS = V3 / "reports"
 
-MODEL = "hf.co/bartowski/Qwen2.5-3B-Instruct-GGUF:Q4_K_M"
+MODEL = "qwen2.5-coder:7b"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 REPORTS.mkdir(parents=True, exist_ok=True)
