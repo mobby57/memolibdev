@@ -1,29 +1,32 @@
-# Architecture - MemoLibDev
+# Architecture de MemoLibDev v3
 
-## Pipeline
+## Flux
 
-```
-Mission -> Contexte -> LLM -> Validation
-       -> Apply -> Verify -> Rollback si echec
-```
+Mission utilisateur -> mission_intent -> context_builder -> analysis_builder
+-> reponse read-only (mode ANALYSER)
 
-## Composants cles
+ou
 
-- project_target.py : resout la cible Git
-- context_builder.py : construit le contexte
-- ollama_provider.py : appelle Ollama
-- llm_planner.py : valide la sortie LLM
-- code_adapter.py : traduit intent en diff
-- coder_authorization.py : verifie HumanApproval
-- d59_controlled_apply.py : SEUL module qui ecrit
-- agent_loop.py : orchestre le cycle
+-> agent_loop -> controlled_coder -> sandbox -> coder_authorization
+-> approbation humaine -> D5.9 (mode CORRIGER)
+
+## Modules
+
+| Fichier | Role |
+|---|---|
+| mission_intent.py | Classification (objectif, domaine, type) |
+| context/context_builder.py | Selection des fichiers pertinents |
+| analysis_builder.py | Extraction de faits sources (SHA + ligne) |
+| agent_loop.py | Orchestrateur 10 etapes |
+| controlled_coder.py | Generation de patch |
+| coder_authorization.py | Binding cryptographique + TTL |
+| project_target.py | Resolution de la cible |
 
 ## Invariants
 
-1. LLM != autorite
-2. Fail-closed
-3. Pas de fallback silencieux
-4. Trace chainee
-5. Manifeste runtime
-6. Rollback automatique
-7. Binding cryptographique
+- Jamais de sys.exit() au module-level
+- Jamais d'ecriture hors sandbox
+- Jamais de commit/push automatique
+- Jamais d'action sans approbation humaine
+- Fail-closed par defaut
+- Chaque fait est source (SHA + ligne)

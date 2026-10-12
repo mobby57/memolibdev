@@ -1,42 +1,45 @@
-# Getting Started - MemoLibDev
+# Demarrage rapide
 
-> Agent de code local, gratuit, qui refuse de modifier sans accord.
-
-## Prerequis
+## 1. Prerequis
 
 - Python 3.11+
 - Git
-- Ollama : https://ollama.com/download
-- Un modele : qwen2.5-coder:7b
+- (Optionnel) Ollama
 
-## Installation
+## 2. Installation
 
-```powershell
-git clone <url> MemoLibDev
-cd MemoLibDev\v3
-```
+    git clone https://github.com/mobby57/memolibdev.git
+    cd memolibdev/v3
+    python -m pip install pytest pytest-timeout
 
-## CLI - 4 modes
+## 3. Configuration
 
-- READ_ONLY : analyse pure
-- PROPOSE : diff propose, aucune ecriture
-- SANDBOX : apply sur copie
-- SUPERVISED_APPLY : apply apres approbation
+    $env:MEMOLIBDEV_TARGET = "C:\Users\moros\Desktop\memolib"
 
-## Exemple
+Pour rendre permanent :
 
-```powershell
-$env:MEMOLIBDEV_TARGET = "C:\chemin\projet"
-python memolibdev_cli.py --mission "Renomme hello en greet" --mode PROPOSE --model qwen2.5-coder:7b
-```
+    Add-Content $PROFILE "`n`$env:MEMOLIBDEV_TARGET = 'C:\Users\moros\Desktop\memolib'"
 
-## Securite
+## 4. Verification
 
-- Aucune ecriture sans approbation humaine
-- Rollback automatique si verification echoue
-- Trace chainee (hash precedent)
-- Fail-closed : refuse d agir en cas de doute
+    python doctor.py
+    python -m pytest -q
+    python check_fixes.py
 
-## Philosophie
+## 5. Premiere mission
 
-Il refuse de mentir sur ce qu il fait.
+    python memolibdev_cli.py --mission "Analyse le fichier src/lib/ai-isolation.ts" --mode READ_ONLY --model qwen2.5-coder:7b
+
+## 6. Depannage
+
+Ollama non disponible :
+
+    python -c "from ollama_helpers import ollama_available; print(ollama_available())"
+
+Tests bloquent :
+
+    python find_blocker.py
+
+Diagnostic complet :
+
+    python doctor.py

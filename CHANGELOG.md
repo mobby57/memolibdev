@@ -161,3 +161,43 @@
 - Le coeur du systeme est valide : apply + verify + rollback automatique
 - Le binding cryptographique empeche l'application sans approbation liee
 - Le fail-closed a bloque une tentative d'apply sans approbation correcte
+
+### Corrige
+
+- mission_intent : faux positifs (ui dans puis) -> match mot entier
+- mission_intent : infinitifs manquants (auditer, examiner, ...)
+- mission_intent : domaine SECURITE enrichi
+- project_target : lazy target (plus de sys.exit module-level)
+- memolibdev_cli : cible Desktop/memolib par defaut
+- context_builder : chemins explicites prioritaires
+- context_builder : budget clarification 4000 -> 20000 chars
+- analysis_builder : 30 faits/fichier (au lieu de 6)
+- analysis_builder : detecteurs TS (RETURN, REGEX, arrow functions)
+- analysis_builder : CONFIG_KEY resserre
+
+### Ajoute
+
+- doctor.py
+- audit_checks.py
+- ollama_helpers.py
+- e2e_smoke_test_v3.py
+- config.py
+- .github/workflows/tests.yml
+
+### Modifie
+
+- pytest.ini : whitelist 4 suites (25 tests)
+- memolibdev_cli.py : modele par defaut qwen2.5-coder:7b
+
+### Supprime
+
+- Clone double memoLib
+- 8 backups *.before-*
+
+## [0.3.0] - 2026-10-11
+
+- Fixes A+B classification
+
+## [0.2.0] - 2026-10-05
+
+- coder_authorization : binding cryptographique

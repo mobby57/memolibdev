@@ -1,142 +1,51 @@
-\# MemoLibDev
+# MemoLibDev v3
 
+Outil d'analyse et de modification assistee par IA pour depots de code,
+avec confinement, validation humaine et sandbox.
 
+**Promesse** : MemoLibDev analyse votre code, propose des modifications,
+mais n'ecrit jamais sans autorisation humaine explicite et verifiable.
 
-> Un assistant de code local, gratuit, qui refuse de modifier vos fichiers sans votre accord.
+## Installation
 
+    git clone https://github.com/mobby57/memolibdev.git
+    cd memolibdev/v3
+    python -m pip install pytest pytest-timeout
 
+## Configuration
 
-\## Le probleme
+    $env:MEMOLIBDEV_TARGET = "C:\Users\moros\Desktop\memolib"
 
+## Usage
 
+    python memolibdev_cli.py --mission "Analyse le fichier src/lib/ai-isolation.ts" --mode READ_ONLY --model qwen2.5-coder:7b
 
-Les assistants de code modernes (Cursor, Copilot, Kiro) coutent 20 $/mois chacun.
+## Modes
 
-Ils modifient vos fichiers sans toujours montrer ce qu'ils font.
+| Mode | Effet |
+|---|---|
+| READ_ONLY | Analyse, aucun changement (defaut) |
+| PROPOSE | Genere une proposition de patch |
+| SANDBOX | Applique dans un sandbox isole |
+| SUPERVISED_APPLY | Applique dans la cible avec approbation |
 
-Ils ne peuvent pas revenir en arriere si quelque chose casse.
+## Tests
 
+    python -m pytest -q
+    python check_fixes.py
+    python doctor.py
 
+## Documentation
 
-\## Notre reponse
+- ARCHITECTURE.md
+- GETTING_STARTED.md
+- CHANGELOG.md
 
+## Garanties
 
-
-MemoLibDev est un assistant de code qui :
-
-
-
-\- Comprend une mission en francais
-
-\- Genere un diff via un LLM local (Ollama)
-
-\- Affiche le diff AVANT d'appliquer
-
-\- Attend votre approbation explicite
-
-\- Rollback automatique si la verification echoue
-
-\- Trace tout (SHA-256, diff, statut)
-
-
-
-\*\*Cout : 0 $/mois. Local. Tracable. Honnete.\*\*
-
-
-
-\## Installation rapide
-
-
-
-1\. Telechargez MemoLibDev.exe sur la page des Releases
-
-2\. Double-cliquez dessus
-
-3\. C'est tout.
-
-
-
-\## Prerequis
-
-
-
-\- Windows 10/11
-
-\- Ollama : https://ollama.com/download
-
-\- Un modele : ollama pull qwen2.5-coder:7b
-
-
-
-\## Utilisation
-
-
-
-\### Interface graphique
-
-
-
-python memolibdev\_gui\_modern.py
-
-
-
-\### Ligne de commande
-
-
-
-$env:MEMOLIBDEV\_TARGET = "C:\\chemin\\vers\\projet"
-
-python memolibdev\_cli.py --mission "votre mission" --mode PROPOSE --model qwen2.5-coder:7b
-
-
-
-\## Les 4 modes
-
-
-
-| Mode | Ecriture | Description |
-
-|---|---|---|
-
-| READ\_ONLY | Non | Analyse pure |
-
-| PROPOSE | Non | Propose un diff |
-
-| SANDBOX | Copie | Applique sur une copie |
-
-| SUPERVISED\_APPLY | Oui | Applique apres approbation |
-
-
-
-\## Securite
-
-
-
-\- Aucune modification sans approbation explicite
-
-\- Rollback automatique si echec
-
-\- Trace chainee (SHA-256)
-
-\- Fail-closed : refuse d'agir en cas de doute
-
-
-
-\## Philosophie
-
-
-
-Il ne dit pas PASS s'il n'a pas de preuve.
-
-Il ne dit pas APPLIED s'il n'a pas verifie.
-
-Il ne modifie rien sans votre accord explicite.
-
-
-
-\## Licence
-
-
-
-MIT
-
+| Garantie | Preuve |
+|---|---|
+| Aucune ecriture sans approbation | e2e_smoke_test_v3.py |
+| Binding cryptographique | coder_authorization.canonical_diff_bytes |
+| Sandbox isole | controlled_coder.verify_patch_in_sandbox |
+| Fail-closed | REQUIRE_DIFF_BINDING = True |
