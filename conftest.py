@@ -5,7 +5,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent
 
-DEFAULT_TARGET = r"C:\Users\moros\Desktop\memolib"
+DEFAULT_TARGET = str(ROOT / "target_repo")
 if "MEMOLIBDEV_TARGET" not in os.environ and Path(DEFAULT_TARGET).is_dir():
     os.environ["MEMOLIBDEV_TARGET"] = DEFAULT_TARGET
 
@@ -15,30 +15,10 @@ collect_ignore_glob = [
     "_legacy_document_engine/*",
 ]
 
-SLOW_FILES = {"test_gui_process_supervision.py"}
+SLOW_FILES: set[str] = set()
 
 INTEGRATION_FILES = {
-    "test_5f3_2_context_manager.py",
-    "test_5f3_3_evidence_resolver.py",
-    "test_5f3_4_2_target_bound_evidence.py",
-    "test_5f3_4_evidence_resolver_v2.py",
-    "test_5f3_compaction.py",
-    "test_5f_qwen7b.py",
-    "test_5g1_integration_v4.py",
-    "test_5g1_integration_v5.py",
-    "test_5g_guardrail.py",
-    "test_analyze_vs_correct.py",
-    "test_api_facade.py",
-    "test_api_state_machine.py",
-    "test_cli_memolibdev.py",
-    "test_d58_e2e_authorization.py",
-    "test_d60_agent_loop.py",
-    "test_d60_phase2_integration.py",
-    "test_e2e_ollama.py",
-    "test_llm_controlled.py",
-    "test_ollama_integration.py",
-    "test_r2_authority_hierarchy.py",
-    "test_r4_timeout.py",
+    "test_d601_context_builder.py",
 }
 
 

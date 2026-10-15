@@ -94,7 +94,7 @@ _INDEX_HTML = """<!DOCTYPE html>
 <div class="wrap">
   <h1>Que voulez-vous que votre agent fasse&nbsp;?</h1>
   <label for="project">Projet (chemin du dépôt à analyser)</label>
-  <input type="text" id="project" placeholder="Ex. : C:\\Users\\moros\\Desktop\\test_target" value="C:\\Users\\moros\\Desktop\\test_target">
+  <input type="text" id="project" placeholder="Ex. : /home/user/projects/my-repo">
   <label for="mission" style="margin-top:16px;">Décrivez votre demande en langage courant</label>
   <textarea id="mission" placeholder="Ex. : expliquer ce que fait le fichier de connexion"></textarea>
 

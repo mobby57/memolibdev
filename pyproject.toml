@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "memolibdev"
+version = "3.0.0"
+description = "Agent de développement contrôlé — analyse et modification de code avec approbation humaine"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "xhtml2pdf>=0.2",
+    "python-docx>=1.0",
+    "qrcode>=7.0",
+    "requests>=2.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+memolibdev = "cli_entry:main"
+
+[tool.setuptools]
+py-modules = [
+    "agent_loop",
+    "analysis_builder",
+    "api_facade",
+    "cli_entry",
+    "code_adapter",
+    "coder_authorization",
+    "controlled_coder",
+    "d59_controlled_apply",
+    "evidence_resolver_v2_2",
+    "file_target",
+    "humanize",
+    "humanize_ui",
+    "import_provenance",
+    "memolibdev_cli",
+    "mission_intent",
+    "project_target",
+    "proposal",
+    "verify_project",
+    "web_mvp",
+]
+packages = ["context", "document_engine", "document_engine.renderers", "interface", "llm"]
+
+[tool.pytest.ini_options]
+testpaths = ["context"]
+markers = [
+    "slow: tests longs",
+    "integration: tests nécessitant Ollama/API",
+]
