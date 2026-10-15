@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import hmac
 from dataclasses import dataclass
 from datetime import datetime, timezone

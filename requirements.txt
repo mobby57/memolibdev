@@ -1,4 +1,4 @@
-﻿# Dependances runtime MemoLibDev
+# Dependances runtime MemoLibDev
 # (Tkinter est inclus dans Python standard)
 customtkinter==6.0.0
 darkdetect==0.8.0

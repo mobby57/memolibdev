@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Build deux .exe : MemoLibDev.exe (GUI) + MemoLibDev-cli.exe (CLI)."""
 import subprocess

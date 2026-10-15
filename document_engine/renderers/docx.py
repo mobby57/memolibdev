@@ -1,4 +1,4 @@
-﻿"""Rendu DOCX via python-docx - facture et rapport editables."""
+"""Rendu DOCX via python-docx - facture et rapport editables."""
 from __future__ import annotations
 from datetime import datetime
 from io import BytesIO

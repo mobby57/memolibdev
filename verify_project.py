@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Verification reelle post-apply. Retourne (ok, message)."""
 from __future__ import annotations
